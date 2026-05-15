@@ -13,7 +13,7 @@ function useMessagePage() {
   const currentUser = useSelector((state) => state.auth.user);
   const [selectedChat, setSelectedChat] = useState(null);
   const [message, setMessage] = useState("");
-  const scrollRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
   const { data: conversationsData, isLoading: conversationsLoading } =
     useGetConversationsQuery();
@@ -37,7 +37,13 @@ function useMessagePage() {
   }, [conversations, selectedChat]);
 
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    container.scrollTo({
+      behavior: "smooth",
+      top: container.scrollHeight,
+    });
   }, [messages.length, selectedConversationId]);
 
   useEffect(() => {
@@ -76,8 +82,8 @@ function useMessagePage() {
     handleSend,
     message,
     messages,
+    messagesContainerRef,
     messagesLoading,
-    scrollRef,
     selectedChat,
     sending,
     setMessage,

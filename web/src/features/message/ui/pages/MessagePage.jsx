@@ -30,28 +30,28 @@ function MessagePage() {
     handleSend,
     message,
     messages,
+    messagesContainerRef,
     messagesLoading,
-    scrollRef,
     sending,
     setMessage,
     setSelectedChat,
   } = useMessagePage();
 
   return (
-    <main className="app-page px-4 py-5 lg:px-8">
-      <div className="mx-auto mb-4 max-w-6xl">
+    <main className="app-page flex h-[100dvh] overflow-hidden px-4 py-4 pb-20 lg:px-8 lg:pb-4">
+      <div className="sr-only">
         <BackButton />
       </div>
-      <section className="app-panel mx-auto grid h-[calc(100vh-96px)] max-w-6xl overflow-hidden rounded-2xl md:grid-cols-[340px_1fr]">
+      <section className="app-panel mx-auto grid min-h-0 w-full max-w-6xl flex-1 overflow-hidden rounded-2xl md:grid-cols-[340px_1fr]">
         <aside
-          className={`${activeChat ? "hidden md:flex" : "flex"} flex-col border-r border-(--color-border)`}
+          className={`${activeChat ? "hidden md:flex" : "flex"} min-h-0 flex-col border-r border-(--color-border)`}
         >
-          <div className="border-b border-(--color-border) p-4">
+          <div className="shrink-0 border-b border-(--color-border) p-4">
             <h1 className="text-2xl font-black">Messages</h1>
            
           </div>
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             {conversationsLoading ? (
               <p className="p-5 text-sm text-(--color-muted)">Loading chats...</p>
             ) : conversations.length ? (
@@ -95,11 +95,11 @@ function MessagePage() {
         </aside>
 
         <section
-          className={`${activeChat ? "flex" : "hidden md:flex"} min-w-0 flex-col`}
+          className={`${activeChat ? "flex" : "hidden md:flex"} min-h-0 min-w-0 flex-col`}
         >
           {activeChat ? (
             <>
-              <header className="flex items-center justify-between border-b border-(--color-border) p-4">
+              <header className="flex shrink-0 items-center justify-between border-b border-(--color-border) p-4">
                 <div className="flex min-w-0 items-center gap-3">
                   <button
                     className="grid h-9 w-9 place-items-center rounded-full border border-(--color-border) md:hidden"
@@ -118,7 +118,10 @@ function MessagePage() {
                 </div>
               </header>
 
-              <div className="flex-1 space-y-3 overflow-y-auto bg-(--color-bg) p-4">
+              <div
+                className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-(--color-bg) p-4"
+                ref={messagesContainerRef}
+              >
                 {messagesLoading ? (
                   <p className="text-sm text-(--color-muted)">
                     Loading messages...
@@ -157,10 +160,9 @@ function MessagePage() {
                     Start this chat with a message.
                   </p>
                 )}
-                <div ref={scrollRef} />
               </div>
 
-              <div className="border-t border-(--color-border) p-4">
+              <div className="shrink-0 border-t border-(--color-border) bg-(--color-surface)/95 p-4 backdrop-blur">
                 <div className="flex gap-3">
                   <textarea
                     className="min-h-11 flex-1 resize-none rounded-xl border border-(--color-border) bg-(--color-bg) px-4 py-3 text-sm outline-none focus:border-(--color-border-strong)"

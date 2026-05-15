@@ -1,11 +1,113 @@
 import { api } from "../../../shared/api/api";
 import { getSocket } from "../../../shared/services/socket";
 
+function getConversationId(message) {
+  return message?.conversationId?._id || message?.conversationId;
+}
+
+function getSenderId(message) {
+  return message?.sender?._id || message?.sender;
+}
+
+function upsertMessage(draft, newMessage) {
+  if (!draft?.messages || !newMessage) return;
+
+  const alreadyExists = draft.messages.some(
+    (message) => message._id === newMessage._id,
+  );
+
+  if (alreadyExists) return;
+
+  const senderId = getSenderId(newMessage)?.toString();
+  const optimisticIndex = draft.messages.findIndex(
+    (message) =>
+      message.isOptimistic &&
+      message.text === newMessage.text &&
+      getSenderId(message)?.toString() === senderId,
+  );
+
+  if (optimisticIndex !== -1) {
+    draft.messages[optimisticIndex] = newMessage;
+    return;
+  }
+
+  draft.messages.push(newMessage);
+}
+
+function patchConversationPreview(draft, message, currentUserId) {
+  if (!draft?.conversations?.length || !message) return;
+
+  const conversationId = getConversationId(message)?.toString();
+  if (!conversationId) return;
+
+  const index = draft.conversations.findIndex(
+    (conversation) => conversation._id?.toString() === conversationId,
+  );
+
+  if (index === -1) {
+    const senderId = getSenderId(message)?.toString();
+    const otherUser =
+      senderId === currentUserId?.toString() ? message.receiver : message.sender;
+
+    if (!otherUser) return;
+
+    draft.conversations.unshift({
+      _id: conversationId,
+      isUnread: senderId !== currentUserId?.toString(),
+      lastMessage: {
+        _id: message._id,
+        createdAt: message.createdAt,
+        sender: getSenderId(message),
+        text: message.text,
+      },
+      otherUser,
+      updatedAt: message.createdAt || new Date().toISOString(),
+    });
+    return;
+  }
+
+  const [conversation] = draft.conversations.splice(index, 1);
+  conversation.lastMessage = {
+    _id: message._id,
+    createdAt: message.createdAt,
+    sender: getSenderId(message),
+    text: message.text,
+  };
+  conversation.updatedAt = message.createdAt || new Date().toISOString();
+  conversation.isUnread =
+    getSenderId(message)?.toString() !== currentUserId?.toString();
+  draft.conversations.unshift(conversation);
+}
+
 export const chatApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getConversations: builder.query({
       query: () => "/chat/conversations",
       providesTags: ["Chat"],
+      async onCacheEntryAdded(
+        arg,
+        { cacheDataLoaded, cacheEntryRemoved, getState, updateCachedData },
+      ) {
+        const socket = getSocket();
+
+        const handleReceiveMessage = (newMessage) => {
+          const currentUserId = getState().auth.user?._id;
+          updateCachedData((draft) => {
+            patchConversationPreview(draft, newMessage, currentUserId);
+          });
+        };
+
+        try {
+          await cacheDataLoaded;
+          socket.off("receive-message", handleReceiveMessage);
+          socket.on("receive-message", handleReceiveMessage);
+        } catch {
+          // cache closed before loading
+        }
+
+        await cacheEntryRemoved;
+        socket.off("receive-message", handleReceiveMessage);
+      },
     }),
     getMessages: builder.query({
       query: ({ conversationId, page = 1 }) =>
@@ -28,15 +130,7 @@ export const chatApi = api.injectEndpoints({
           }
 
           updateCachedData((draft) => {
-            if (!draft?.messages) return;
-
-            const alreadyExists = draft.messages.some(
-              (message) => message._id === newMessage._id,
-            );
-
-            if (!alreadyExists) {
-              draft.messages.push(newMessage);
-            }
+            upsertMessage(draft, newMessage);
           });
         };
 
@@ -76,7 +170,13 @@ export const chatApi = api.injectEndpoints({
 
         if (!conversationId || !text || !currentUser) {
           try {
-            await queryFulfilled;
+            const { data } = await queryFulfilled;
+            dispatch(
+              api.util.updateQueryData("getConversations", undefined, (draft) => {
+                patchConversationPreview(draft, data.newMessage, currentUser?._id);
+              }),
+            );
+            dispatch(api.util.invalidateTags(["Chat"]));
           } catch {
             // handled by caller
           }
@@ -110,55 +210,53 @@ export const chatApi = api.injectEndpoints({
 
         const conversationsPatch = dispatch(
           api.util.updateQueryData("getConversations", undefined, (draft) => {
-            const conversation = draft?.conversations?.find(
-              (item) => item._id === conversationId,
-            );
-
-            if (conversation) {
-              conversation.lastMessage = {
-                _id: tempId,
-                createdAt: optimisticMessage.createdAt,
-                sender: currentUser._id,
-                text,
-              };
-              conversation.updatedAt = optimisticMessage.createdAt;
-              conversation.isUnread = false;
-            }
+            patchConversationPreview(draft, optimisticMessage, currentUser._id);
           }),
         );
 
         try {
           const { data } = await queryFulfilled;
+          const realMessage = data.newMessage;
+
           dispatch(
             api.util.updateQueryData(
               "getMessages",
               { conversationId, page: 1 },
               (draft) => {
-                if (draft?.messages) {
-                  const existingRealIndex = draft.messages.findIndex(
-                    (message) => message._id === data.newMessage._id,
-                  );
-                  const index = draft.messages.findIndex(
-                    (message) => message._id === tempId,
-                  );
+                if (!draft?.messages) return;
 
-                  if (existingRealIndex !== -1 && index !== -1) {
-                    draft.messages.splice(index, 1);
-                  } else if (index !== -1) {
-                    draft.messages[index] = data.newMessage;
-                  } else if (existingRealIndex === -1) {
-                    draft.messages.push(data.newMessage);
-                  }
+                const existingRealIndex = draft.messages.findIndex(
+                  (message) => message._id === realMessage._id,
+                );
+                const tempIndex = draft.messages.findIndex(
+                  (message) => message._id === tempId,
+                );
+
+                if (existingRealIndex !== -1 && tempIndex !== -1) {
+                  draft.messages.splice(tempIndex, 1);
+                  return;
                 }
+
+                if (tempIndex !== -1) {
+                  draft.messages[tempIndex] = realMessage;
+                  return;
+                }
+
+                upsertMessage(draft, realMessage);
               },
             ),
+          );
+
+          dispatch(
+            api.util.updateQueryData("getConversations", undefined, (draft) => {
+              patchConversationPreview(draft, realMessage, currentUser._id);
+            }),
           );
         } catch {
           messagesPatch.undo();
           conversationsPatch.undo();
         }
       },
-      invalidatesTags: ["Chat"],
     }),
     markAsRead: builder.mutation({
       query: (conversationId) => ({
