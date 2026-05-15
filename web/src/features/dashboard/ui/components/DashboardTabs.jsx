@@ -2,7 +2,6 @@ const tabs = [
   { id: "details", label: "Edit your details" },
   { id: "projects", label: "Your projects" },
   { id: "blogs", label: "Your blogs" },
-  { id: "activities", label: "Your activities" },
 ];
 
 function DashboardTabs({ activeTab, onTabChange }) {
