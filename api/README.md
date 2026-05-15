@@ -62,7 +62,15 @@ IMAGEKIT_PRIVATE_KEY=your_imagekit_private_key
 IMAGEKIT_URL_ENDPOINT=your_imagekit_url_endpoint
 
 SENDER_EMAIL=your_email
-SENDER_PASSWORD=your_email_app_password
+SENDER_PASSWORD=your_email_app_password_without_spaces
+
+# Optional: use these instead when deploying with a custom SMTP provider.
+# SMTP_HOST=smtp.example.com
+# SMTP_PORT=587
+# SMTP_SECURE=false
+# SMTP_USER=your_smtp_user
+# SMTP_PASS=your_smtp_password
+# SMTP_FROM="DevHub <no-reply@example.com>"
 
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret

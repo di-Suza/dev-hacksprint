@@ -1,9 +1,10 @@
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 const app = require("./src/app");
 const http = require("http");
 const connectToDb = require("./src/config/connectToDb");
 const { initSocket } = require("./src/socket/socketMain");
 require("./src/config/connectToRedis");
-require("dotenv").config();
 
 const server = http.createServer(app);
 

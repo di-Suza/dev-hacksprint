@@ -8,8 +8,8 @@ const otp = z
   .regex(/^\d+$/, "OTP must be numeric");
 const userName = z
   .string()
-  .min(3, "Too short")
   .trim()
+  .min(3, "User name must be at least 3 chars")
   .transform((v) => v.replace(/\s+/g, " "));
 const loginSchema = z.object({ body: z.object({ email: emailV, password }) });
 const sendOtpSchema = z.object({

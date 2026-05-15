@@ -227,7 +227,7 @@ module.exports.googleSign = async (code) => {
   ]);
 
   return {
-    user: { ...user._doc },
+    user,
     accessToken,
     refreshToken,
   };

@@ -24,12 +24,18 @@ module.exports.sendAndSaveOtp = async (email, currentCount) => {
     { upsert: true, new: true, setDefaultsOnInsert: true },
   );
 
-  //Send Email
+  // Send Email
   try {
-    await sendEmail(email, rawOtp);
+    await sendEmail({ to: email, otp: rawOtp });
   } catch (mailError) {
     await OTP.updateOne({ email }, { $inc: { otpCount: -1 } });
-    throw new AppError("Email delivery failed!", 500);
+    console.error("OTP email delivery failed:", {
+      email,
+      message: mailError.message,
+      code: mailError.code,
+      command: mailError.command,
+    });
+    throw new AppError("Unable to send OTP email. Please try again later.", 502);
   }
 
   return updatedOtpRecord;
