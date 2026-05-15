@@ -1,4 +1,4 @@
-const imagekit = require("../utilities/imagekit");
+const imagekit = require("../utilities/imageKit");
 const Likes = require("../models/like.model");
 const Project = require("../models/project.model");
 const Users = require("../models/user.model");

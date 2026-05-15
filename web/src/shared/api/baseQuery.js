@@ -1,6 +1,7 @@
 import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-
+const productionURL = "https://dev-hacksprint.onrender.com/api";
+// const localURL = "http://localhost:8080/api"
 export const baseQuery = fetchBaseQuery({
-  baseUrl: "http://localhost:8080/api",
-  credentials: "include", 
+  baseUrl: productionURL,
+  credentials: "include",
 });
