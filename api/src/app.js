@@ -14,7 +14,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: "https://devhacksprint.netlify.app/",
+    origin: "https://devhacksprint.netlify.app",
     credentials: true, // for cookies
   }),
 );
