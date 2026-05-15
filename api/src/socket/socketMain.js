@@ -1,6 +1,6 @@
 const { Server } = require("socket.io");
 const chatHandler = require("./chatHandler");
-const { socketAuth } = require("../Middlewares/socketAuth.middleware");
+const { socketAuth } = require("../middlewares/socketAuth.middleware");
 let io;
 const initSocket = (server) => {
   io = new Server(server, {
