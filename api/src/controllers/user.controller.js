@@ -71,11 +71,57 @@ module.exports.updateSocialLinks = catchAsync(async (req, res) => {
 module.exports.getUserProfile = catchAsync(async (req, res) => {
   const { userId } = req.params;
 
-  const userProfile = await userServices.getUserProfile(userId);
+  const userProfile = await userServices.getUserProfile(req.user._id, userId);
 
   res.status(200).json({
     success: true,
     message: "User profile fetched successfully",
     user: userProfile,
+  });
+});
+
+module.exports.followUser = catchAsync(async (req, res) => {
+  const result = await userServices.followUser(req.user._id, req.params.userId);
+
+  res.status(200).json({
+    success: true,
+    message: "User followed successfully",
+    ...result,
+  });
+});
+
+module.exports.unfollowUser = catchAsync(async (req, res) => {
+  const result = await userServices.unfollowUser(req.user._id, req.params.userId);
+
+  res.status(200).json({
+    success: true,
+    message: "User unfollowed successfully",
+    ...result,
+  });
+});
+
+module.exports.getFollowers = catchAsync(async (req, res) => {
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 20;
+  const result = await userServices.getFollowers(req.params.userId, page, limit);
+
+  res.status(200).json({
+    success: true,
+    message: "Followers fetched successfully",
+    currentPage: page,
+    ...result,
+  });
+});
+
+module.exports.getFollowing = catchAsync(async (req, res) => {
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 20;
+  const result = await userServices.getFollowing(req.params.userId, page, limit);
+
+  res.status(200).json({
+    success: true,
+    message: "Following fetched successfully",
+    currentPage: page,
+    ...result,
   });
 });

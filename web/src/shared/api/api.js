@@ -11,6 +11,8 @@ export const api = createApi({
     "Comment",
     "Feed",
     "ProfileUser",
+    "Chat",
+    "Notification",
     "Followers",
     "Following",
   ],

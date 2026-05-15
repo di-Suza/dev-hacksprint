@@ -9,6 +9,8 @@ const likeRouter = require("./like.route");
 const commentRouter = require("./comment.route");
 const feedRouter = require("./feed.route");
 const searchRouter = require("./search.route");
+const chatRouter = require("./chat.route");
+const notificationRouter = require("./notification.route");
 
 // Mounting Routes
 router.use("/auth", authRouter);
@@ -19,5 +21,7 @@ router.use("/like", likeRouter);
 router.use("/comment", commentRouter);
 router.use("/feed", feedRouter);
 router.use("/search", searchRouter);
+router.use("/chat", chatRouter);
+router.use("/notification", notificationRouter);
 
 module.exports = router;

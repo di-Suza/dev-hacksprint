@@ -24,13 +24,13 @@ function FeedProjectCard({ onComment, project }) {
       </header>
 
       <Link
-        className="relative grid aspect-[4/3] min-h-[320px] place-items-center bg-black"
+        className="relative grid h-[360px] max-h-[56vh] min-h-[240px] place-items-center overflow-hidden bg-black sm:h-[430px]"
         to={`/projects/${project._id}`}
       >
         {coverImage ? (
           <img
             alt={project.title}
-            className="h-full w-full object-contain object-center"
+            className="block h-full w-full object-contain object-center"
             src={coverImage}
           />
         ) : (

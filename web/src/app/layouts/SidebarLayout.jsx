@@ -7,15 +7,30 @@ import {
 } from "lucide-react";
 import { NavLink, Outlet } from "react-router";
 
+import { useGetConversationsQuery } from "../../features/message/api/chat.api";
+import { useGetNotificationsQuery } from "../../features/notification/api/notification.api";
+import { useUnreadMessagesCount } from "../../shared/hooks/useUnreadMessagesCount";
+import { useUnreadNotificationsCount } from "../../shared/hooks/useUnreadNotificationsCount";
+
 const navItems = [
   { label: "Home", to: "/feed", icon: Home },
   { label: "Search", to: "/search", icon: Search },
-  { label: "Message", to: "/messages", icon: MessageCircle },
-  { label: "Notification", to: "/notifications", icon: Bell },
+  { countKey: "messages", label: "Message", to: "/messages", icon: MessageCircle },
+  { countKey: "notifications", label: "Notification", to: "/notifications", icon: Bell },
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
 ];
 
 function SidebarLayout() {
+  useGetConversationsQuery();
+  useGetNotificationsQuery(1);
+
+  const unreadMessagesCount = useUnreadMessagesCount();
+  const unreadNotificationsCount = useUnreadNotificationsCount();
+  const counts = {
+    messages: unreadMessagesCount,
+    notifications: unreadNotificationsCount,
+  };
+
   return (
     <div className="min-h-screen bg-(--color-bg) text-(--color-text)">
       <aside className="group fixed inset-y-0 left-0 z-40 hidden w-18 overflow-hidden border-r border-(--color-border) bg-(--color-surface) px-3 py-5 shadow-[30px_0_90px_rgba(0,0,0,0.35)] transition-[width] duration-300 ease-out hover:w-64 lg:block">
@@ -31,6 +46,7 @@ function SidebarLayout() {
         <nav className="mt-8 grid gap-2">
           {navItems.map((item) => {
             const Icon = item.icon;
+            const count = counts[item.countKey] || 0;
 
             return (
               <NavLink
@@ -45,7 +61,14 @@ function SidebarLayout() {
                 key={item.to}
                 to={item.to}
               >
-                <Icon className="shrink-0" size={20} aria-hidden="true" />
+                <span className="relative shrink-0">
+                  <Icon size={20} aria-hidden="true" />
+                  {count > 0 && (
+                    <span className="absolute -right-2 -top-2 grid h-4 min-w-4 place-items-center rounded-full bg-(--color-danger) px-1 text-[10px] font-black leading-none text-white">
+                      {count > 9 ? "9+" : count}
+                    </span>
+                  )}
+                </span>
                 <span className="whitespace-nowrap opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                   {item.label}
                 </span>
@@ -58,6 +81,7 @@ function SidebarLayout() {
       <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-(--color-border) bg-(--color-surface) lg:hidden">
         {navItems.map((item) => {
           const Icon = item.icon;
+          const count = counts[item.countKey] || 0;
 
           return (
             <NavLink
@@ -72,7 +96,14 @@ function SidebarLayout() {
               key={item.to}
               to={item.to}
             >
-              <Icon size={19} aria-hidden="true" />
+              <span className="relative">
+                <Icon size={19} aria-hidden="true" />
+                {count > 0 && (
+                  <span className="absolute -right-2.5 -top-2.5 grid h-4 min-w-4 place-items-center rounded-full bg-(--color-danger) px-1 text-[10px] font-black leading-none text-white">
+                    {count > 9 ? "9+" : count}
+                  </span>
+                )}
+              </span>
               {item.label}
             </NavLink>
           );

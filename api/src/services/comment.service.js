@@ -1,6 +1,7 @@
 const Blog = require("../models/blog.model");
 const Comments = require("../models/comment.model");
 const Project = require("../models/project.model");
+const notificationServices = require("./notification.service");
 const { AppError } = require("../utilities/appError");
 
 const contentConfig = {
@@ -91,6 +92,14 @@ module.exports.createComment = async (userId, contentType, contentId, text) => {
     "user",
     "userName profilePicture",
   );
+
+  await notificationServices.send({
+    senderId: userId,
+    recipientId: content.user,
+    type: "COMMENT",
+    contentId,
+    onModel: config.modelName,
+  });
 
   return {
     comment: decorateComment(populatedComment, userId),

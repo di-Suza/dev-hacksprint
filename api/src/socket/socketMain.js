@@ -20,7 +20,7 @@ const initSocket = (server) => {
     chatHandler(socket);
 
     socket.on("disconnect", () => {
-      console.log(socket.user._id.toString(), "User disconnected");
+      console.log(socket.user.userName.toString(), "User disconnected");
     });
   });
 

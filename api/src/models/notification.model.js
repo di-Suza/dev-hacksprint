@@ -12,7 +12,12 @@ const notificationSchema = new mongoose.Schema(
       required: true,
     },
     contentId: { type: mongoose.Schema.Types.ObjectId, refPath: "onModel" },
-    onModel: { type: String, enum: ["Post", "User", "Comment"] },
+    onModel: { type: String, enum: ["Project", "Blog", "User"] },
+    contentType: {
+      type: String,
+      enum: ["project", "blog", "user"],
+      required: true,
+    },
     recipient: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

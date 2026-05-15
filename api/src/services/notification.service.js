@@ -1,30 +1,30 @@
 const Notifications = require("../models/notification.model");
 const { emitToUser } = require("./socket.service");
 
-module.exports.getNotifications = async (userId, page, limit) => {
-  const notifications = await Notifications.find({ recipient: userId })
+function getContentType(onModel) {
+  if (onModel === "Project") return "project";
+  if (onModel === "Blog") return "blog";
+  return "user";
+}
+
+const contentSelect = {
+  Blog: "title content",
+  Project: "title images description",
+  User: "userName profilePicture",
+};
+
+module.exports.getNotifications = async (userId, page = 1, limit = 10) => {
+  return Notifications.find({ recipient: userId })
     .sort({ createdAt: -1 })
     .populate("sender", "userName profilePicture")
     .populate({
       path: "contentId",
-      select: "images comment post",
+      select: "title content images description userName profilePicture",
       options: { strictPopulate: false },
-      populate: {
-        path: "post",
-        select: "images",
-        options: { strictPopulate: false },
-      },
     })
     .skip((page - 1) * limit)
     .limit(limit)
     .lean();
-
-  const cleanedData = notifications.map((notif) => {
-    if (notif.onModel === "User") notif.contentId = undefined;
-    return notif;
-  });
-
-  return cleanedData;
 };
 
 module.exports.send = async ({
@@ -34,44 +34,51 @@ module.exports.send = async ({
   contentId,
   onModel,
 }) => {
-  
-  if (senderId.toString() === recipientId.toString()) return;
-  const notif = await Notifications.create({
-    sender: senderId,
-    recipient: recipientId,
-    type,
-    contentId,
-    onModel,
-  });
+  if (!recipientId || senderId.toString() === recipientId.toString()) return;
+
+  const contentType = getContentType(onModel);
+  const notif = await Notifications.findOneAndUpdate(
+    {
+      sender: senderId,
+      recipient: recipientId,
+      type,
+      contentId,
+      onModel,
+    },
+    {
+      $set: {
+        contentType,
+        isRead: false,
+      },
+      $setOnInsert: {
+        sender: senderId,
+        recipient: recipientId,
+        type,
+        contentId,
+        onModel,
+      },
+    },
+    { new: true, upsert: true, setDefaultsOnInsert: true },
+  );
+
   await notif.populate([
     { path: "sender", select: "userName profilePicture" },
     {
       path: "contentId",
-      select: "images comment post",
+      select: contentSelect[onModel],
       options: { strictPopulate: false },
-      populate: {
-        path: "post",
-        select: { images: { $slice: 1 } },
-        options: { strictPopulate: false },
-      },
     },
   ]);
 
-  const emitData = notif.toObject();
-
-  if (onModel === "User") {
-    emitData.contentId = undefined;
-  }
-
-  emitToUser(recipientId.toString(), "new_notification", emitData);
+  emitToUser(recipientId.toString(), "new_notification", notif.toObject());
 };
 
 module.exports.remove = async ({ senderId, recipientId, type, contentId }) => {
   const deletedNotif = await Notifications.findOneAndDelete({
     sender: senderId,
     recipient: recipientId,
-    type: type,
-    contentId: contentId,
+    type,
+    contentId,
   });
 
   if (deletedNotif) {

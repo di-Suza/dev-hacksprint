@@ -1,4 +1,5 @@
 const Users = require("../models/user.model");
+const Follows = require("../models/follow.model");
 const { AppError } = require("../utilities/appError");
 const { generateHash, compareHash } = require("../utilities/password");
 const redis = require("../config/connectToRedis");
@@ -200,11 +201,11 @@ module.exports.updateSocialLinks = async (userId, incomingFields, updates) => {
   };
 };
 
-module.exports.getUserProfile = async (userId) => {
+module.exports.getUserProfile = async (currentUserId, userId) => {
   const Project = require("../models/project.model");
   const Blog = require("../models/blog.model");
 
-  const [user, projects, blogs] = await Promise.all([
+  const [user, projects, blogs, isFollowed] = await Promise.all([
     Users.findById(userId).select("-password -loginAttempts -isGoogleUser").lean(),
     Project.find({ user: userId })
       .select("_id title images createdAt")
@@ -214,6 +215,7 @@ module.exports.getUserProfile = async (userId) => {
       .select("_id title content createdAt")
       .sort({ createdAt: -1 })
       .lean(),
+    Follows.exists({ follower: currentUserId, following: userId }),
   ]);
 
   if (!user) {
@@ -221,9 +223,155 @@ module.exports.getUserProfile = async (userId) => {
   }
 
   return {
-    user,
+    user: {
+      ...user,
+      isFollowed: Boolean(isFollowed),
+    },
     projects,
     blogs,
+  };
+};
+
+module.exports.followUser = async (userId, followUserId) => {
+  if (userId.toString() === followUserId.toString()) {
+    throw new AppError("You cannot follow yourself!", 400);
+  }
+
+  const targetUser = await Users.findById(followUserId).select("_id");
+  if (!targetUser) {
+    throw new AppError("User not found!", 404);
+  }
+
+  try {
+    await Follows.create({ follower: userId, following: followUserId });
+  } catch (error) {
+    if (error.code !== 11000) {
+      throw error;
+    }
+
+    const [currentUser, profileUser] = await Promise.all([
+      Users.findById(userId).select("followingCount").lean(),
+      Users.findById(followUserId).select("followersCount").lean(),
+    ]);
+
+    return {
+      isFollowed: true,
+      followersCount: profileUser?.followersCount || 0,
+      followingCount: currentUser?.followingCount || 0,
+    };
+  }
+
+  const [currentUser, profileUser] = await Promise.all([
+    Users.findByIdAndUpdate(
+      userId,
+      { $inc: { followingCount: 1 } },
+      { new: true, select: "followingCount" },
+    ).lean(),
+    Users.findByIdAndUpdate(
+      followUserId,
+      { $inc: { followersCount: 1 } },
+      { new: true, select: "followersCount" },
+    ).lean(),
+    redis.del(`user_:${userId}`),
+    redis.del(`user_:${followUserId}`),
+  ]);
+
+  await notificationServices.send({
+    senderId: userId,
+    recipientId: followUserId,
+    type: "FOLLOW",
+    contentId: followUserId,
+    onModel: "User",
+  });
+
+  return {
+    isFollowed: true,
+    followersCount: profileUser?.followersCount || 0,
+    followingCount: currentUser?.followingCount || 0,
+  };
+};
+
+module.exports.unfollowUser = async (userId, followUserId) => {
+  if (userId.toString() === followUserId.toString()) {
+    throw new AppError("You cannot unfollow yourself!", 400);
+  }
+
+  const deletedFollow = await Follows.findOneAndDelete({
+    follower: userId,
+    following: followUserId,
+  });
+
+  if (!deletedFollow) {
+    const [currentUser, profileUser] = await Promise.all([
+      Users.findById(userId).select("followingCount").lean(),
+      Users.findById(followUserId).select("followersCount").lean(),
+    ]);
+
+    return {
+      isFollowed: false,
+      followersCount: profileUser?.followersCount || 0,
+      followingCount: currentUser?.followingCount || 0,
+    };
+  }
+
+  const [currentUser, profileUser] = await Promise.all([
+    Users.findOneAndUpdate(
+      { _id: userId, followingCount: { $gt: 0 } },
+      { $inc: { followingCount: -1 } },
+      { new: true, select: "followingCount" },
+    ).lean(),
+    Users.findOneAndUpdate(
+      { _id: followUserId, followersCount: { $gt: 0 } },
+      { $inc: { followersCount: -1 } },
+      { new: true, select: "followersCount" },
+    ).lean(),
+    redis.del(`user_:${userId}`),
+    redis.del(`user_:${followUserId}`),
+  ]);
+
+  await notificationServices.remove({
+    senderId: userId,
+    recipientId: followUserId,
+    type: "FOLLOW",
+    contentId: followUserId,
+  });
+
+  return {
+    isFollowed: false,
+    followersCount: profileUser?.followersCount || 0,
+    followingCount: currentUser?.followingCount || 0,
+  };
+};
+
+module.exports.getFollowers = async (userId, page = 1, limit = 20) => {
+  const followersList = await Follows.find({ following: userId })
+    .populate("follower", "userName headline profilePicture followersCount followingCount")
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(limit)
+    .lean();
+
+  return {
+    followers: followersList
+      .map((follow) => follow.follower)
+      .filter(Boolean),
+    hasMore: followersList.length === limit,
+  };
+};
+
+module.exports.getFollowing = async (userId, page = 1, limit = 20) => {
+  const followingList = await Follows.find({ follower: userId })
+    .populate("following", "userName headline profilePicture followersCount followingCount")
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(limit)
+    .lean();
+
+  return {
+    following: followingList
+      .map((follow) => follow.following)
+      .filter(Boolean),
+    hasMore: followingList.length === limit,
   };
 };
 

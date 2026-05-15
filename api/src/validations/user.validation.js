@@ -91,9 +91,16 @@ const updateSocialLinksSchema = z.object({
     }),
 });
 
+const userIdParamsSchema = z.object({
+  params: z.object({
+    userId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid user id"),
+  }),
+});
+
 module.exports = {
   updateGeneralInfoSchema,
   updateProfessionalInfoSchema,
   updateProfilePictureSchema,
   updateSocialLinksSchema,
+  userIdParamsSchema,
 };

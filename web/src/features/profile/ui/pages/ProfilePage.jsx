@@ -1,19 +1,36 @@
-import { useEffect } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useEffect, useState } from "react";
+import { Send, X } from "lucide-react";
+import { Link, useNavigate, useParams } from "react-router";
 import { useSelector } from "react-redux";
+import { toast } from "sonner";
 
 import { useGetUserProfileQuery } from "../../api/profile.api";
+import { useDebouncedFollow } from "../../hooks/useDebouncedFollow";
+import { useSendMessageMutation } from "../../../message/api/chat.api";
+import FollowListModal from "../components/FollowListModal";
 
 function ProfilePage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const currentUser = useSelector((state) => state.auth.user);
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+  const [messageText, setMessageText] = useState("");
+  const [followModalType, setFollowModalType] = useState("");
+  const [sendMessage, { isLoading: sendingMessage }] = useSendMessageMutation();
 
   // Redirect to dashboard if viewing own profile
   const shouldSkip = currentUser?._id === id;
 
   const { data, isLoading } = useGetUserProfileQuery(id, {
     skip: shouldSkip,
+  });
+  const user = data?.user?.user;
+  const projects = data?.user?.projects || [];
+  const blogs = data?.user?.blogs || [];
+  const profileFollow = useDebouncedFollow({
+    followersCount: user?.followersCount,
+    isFollowed: user?.isFollowed,
+    userId: user?._id,
   });
 
   useEffect(() => {
@@ -50,11 +67,6 @@ function ProfilePage() {
     );
   }
 
-  const user = data?.user?.user;
-  const projects = data?.user?.projects || [];
-  const blogs = data?.user?.blogs || [];
-
-  console.log(user);
   if (!user) {
     return (
       <main className="min-h-screen grid place-items-center bg-[radial-gradient(circle_at_22%_0%,rgba(112,241,201,0.08),transparent_24%),var(--color-bg)]">
@@ -63,6 +75,24 @@ function ProfilePage() {
         </div>
       </main>
     );
+  }
+
+  async function handleStartChat() {
+    const text = messageText.trim();
+    if (!text) return;
+
+    try {
+      await sendMessage({
+        message: text,
+        receiverId: user._id,
+      }).unwrap();
+      toast.success("Message sent");
+      setMessageText("");
+      setIsMessageModalOpen(false);
+      navigate("/messages");
+    } catch (error) {
+      toast.error(error?.data?.message || "Message not sent");
+    }
   }
 
   return (
@@ -93,18 +123,26 @@ function ProfilePage() {
 
               {/* Stats */}
               <div className="grid grid-cols-3 gap-4 mb-6 py-4 border-y border-(--color-border)">
-                <div>
+                <button
+                  className="rounded-xl p-2 text-left transition hover:bg-(--color-bg)"
+                  type="button"
+                  onClick={() => setFollowModalType("followers")}
+                >
                   <p className="text-2xl font-black">
-                    {user.followersCount || 0}
+                    {profileFollow.followersCount || 0}
                   </p>
                   <p className="text-sm text-(--color-muted)">Followers</p>
-                </div>
-                <div>
+                </button>
+                <button
+                  className="rounded-xl p-2 text-left transition hover:bg-(--color-bg)"
+                  type="button"
+                  onClick={() => setFollowModalType("following")}
+                >
                   <p className="text-2xl font-black">
                     {user.followingCount || 0}
                   </p>
                   <p className="text-sm text-(--color-muted)">Following</p>
-                </div>
+                </button>
                 <div>
                   <p className="text-2xl font-black">
                     {user.projectsCount || 0}
@@ -115,12 +153,25 @@ function ProfilePage() {
 
               {/* Buttons */}
               <div className="flex gap-3">
-                <button className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-(--color-text) text-(--color-bg) px-4 py-3 font-bold hover:opacity-90 transition">
+                <button
+                  className={[
+                    "flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 font-bold transition disabled:cursor-not-allowed disabled:opacity-70",
+                    profileFollow.isFollowed
+                      ? "border border-(--color-border) bg-(--color-surface-strong) text-(--color-text) hover:border-(--color-border-strong)"
+                      : "bg-(--color-text) text-(--color-bg) hover:opacity-90",
+                  ].join(" ")}
+                  disabled={profileFollow.isSyncingFollow}
+                  type="button"
+                  onClick={profileFollow.toggleFollow}
+                >
                   {/* <Mail size={18} /> */}
-                  Follow
+                  {profileFollow.isFollowed ? "Following" : "Follow"}
                 </button>
-                <button className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-(--color-border) px-4 py-3 font-bold hover:border-(--color-border-strong) transition">
-                  {/* <MessageCircle size={18} /> */}
+                <button
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-(--color-border) px-4 py-3 font-bold transition hover:border-(--color-border-strong)"
+                  type="button"
+                  onClick={() => setIsMessageModalOpen(true)}
+                >
                   Message
                 </button>
               </div>
@@ -201,9 +252,9 @@ function ProfilePage() {
             <h2 className="text-xl font-black mb-4">Projects</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {projects.map((project) => (
-                <a
+                <Link
                   key={project._id}
-                  href={`/projects/${project._id}`}
+                  to={`/projects/${project._id}`}
                   className="group rounded-xl border border-(--color-border) overflow-hidden hover:border-(--color-border-strong) transition"
                 >
                   <div className="aspect-video bg-black overflow-hidden">
@@ -229,7 +280,7 @@ function ProfilePage() {
                       View project →
                     </p>
                   </div>
-                </a>
+                </Link>
               ))}
             </div>
           </div>
@@ -249,9 +300,9 @@ function ProfilePage() {
                   .substring(0, 150);
 
                 return (
-                  <a
+                  <Link
                     key={blog._id}
-                    href={`/blogs/${blog._id}`}
+                    to={`/blogs/${blog._id}`}
                     className="block rounded-xl border border-(--color-border) p-4 hover:bg-(--color-surface-strong) transition"
                   >
                     <p className="font-bold hover:text-(--color-accent) transition">
@@ -260,7 +311,7 @@ function ProfilePage() {
                     <p className="mt-2 text-sm text-(--color-muted) line-clamp-2">
                       {excerpt || "No preview available"}
                     </p>
-                  </a>
+                  </Link>
                 );
               })}
             </div>
@@ -311,6 +362,59 @@ function ProfilePage() {
           </div>
         )}
       </section>
+
+      {isMessageModalOpen && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-(--color-border) bg-(--color-surface) p-5 shadow-2xl">
+            <div className="flex items-center justify-between gap-4 border-b border-(--color-border) pb-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <img
+                  alt={user.userName}
+                  className="h-12 w-12 rounded-full object-cover"
+                  src={user.profilePicture?.url}
+                />
+                <div className="min-w-0">
+                  <p className="font-black">Message {user.userName}</p>
+                  <p className="truncate text-sm text-(--color-muted)">
+                    Start a private conversation
+                  </p>
+                </div>
+              </div>
+              <button
+                className="grid h-9 w-9 place-items-center rounded-lg hover:bg-(--color-bg)"
+                type="button"
+                onClick={() => setIsMessageModalOpen(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <textarea
+              className="mt-4 min-h-32 w-full resize-none rounded-xl border border-(--color-border) bg-(--color-bg) px-4 py-3 text-sm outline-none focus:border-(--color-border-strong)"
+              placeholder="Write your message..."
+              value={messageText}
+              onChange={(event) => setMessageText(event.target.value)}
+            />
+            <button
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-(--color-text) px-4 py-3 font-bold text-(--color-bg) disabled:opacity-50"
+              disabled={!messageText.trim() || sendingMessage}
+              type="button"
+              onClick={handleStartChat}
+            >
+              <Send size={17} />
+              Send message
+            </button>
+          </div>
+        </div>
+      )}
+
+      {followModalType ? (
+        <FollowListModal
+          type={followModalType}
+          userId={user._id}
+          onClose={() => setFollowModalType("")}
+        />
+      ) : null}
     </main>
   );
 }

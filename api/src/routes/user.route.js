@@ -9,13 +9,60 @@ const {
   updateProfessionalInfoSchema,
   updateProfilePictureSchema,
   updateSocialLinksSchema,
+  userIdParamsSchema,
 } = require("../validations/user.validation");
 
 const userRouter = express.Router();
 
-userRouter.get("/:userId", controller.getUserProfile);
-
 userRouter
+  .get(
+    "/:userId/followers",
+    isAuthenticated,
+    validate(userIdParamsSchema),
+    controller.getFollowers,
+  )
+  .get(
+    "/:userId/following",
+    isAuthenticated,
+    validate(userIdParamsSchema),
+    controller.getFollowing,
+  )
+  .get(
+    "/getFollowers/:userId",
+    isAuthenticated,
+    validate(userIdParamsSchema),
+    controller.getFollowers,
+  )
+  .get(
+    "/getFollowing/:userId",
+    isAuthenticated,
+    validate(userIdParamsSchema),
+    controller.getFollowing,
+  )
+  .post(
+    "/:userId/follow",
+    isAuthenticated,
+    validate(userIdParamsSchema),
+    controller.followUser,
+  )
+  .delete(
+    "/:userId/follow",
+    isAuthenticated,
+    validate(userIdParamsSchema),
+    controller.unfollowUser,
+  )
+  .post(
+    "/followUser/:userId",
+    isAuthenticated,
+    validate(userIdParamsSchema),
+    controller.followUser,
+  )
+  .delete(
+    "/unfollowUser/:userId",
+    isAuthenticated,
+    validate(userIdParamsSchema),
+    controller.unfollowUser,
+  )
   .patch(
     "/updateProfilePicture",
     isAuthenticated,
@@ -41,5 +88,12 @@ userRouter
     validate(updateSocialLinksSchema),
     controller.updateSocialLinks,
   );
+
+userRouter.get(
+  "/:userId",
+  isAuthenticated,
+  validate(userIdParamsSchema),
+  controller.getUserProfile,
+);
 
 module.exports = userRouter;

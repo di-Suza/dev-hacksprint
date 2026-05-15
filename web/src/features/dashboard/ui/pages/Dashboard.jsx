@@ -35,6 +35,7 @@ import ProfileEditor from "../components/ProfileEditor";
 import ProfileSidebar from "../components/ProfileSidebar";
 import ProjectCard from "../components/ProjectCard";
 import ProjectEmptyState from "../components/ProjectEmptyState";
+import FollowListModal from "../../../profile/ui/components/FollowListModal";
 
 const emptySocialLinks = {
   github: "",
@@ -94,6 +95,7 @@ const Dashboard = () => {
   const [isBlogFormOpen, setIsBlogFormOpen] = useState(false);
   const [editingBlog, setEditingBlog] = useState(null);
   const [deletingBlogId, setDeletingBlogId] = useState("");
+  const [followModalType, setFollowModalType] = useState("");
   const [logout, { isLoading }] = useLogoutMutation();
   const [updateProfilePicture, { isLoading: isSavingPicture }] =
     useUpdateProfilePictureMutation();
@@ -359,6 +361,8 @@ const Dashboard = () => {
           selectedFileName={selectedFileName}
           user={user}
           onFileChange={handleFileChange}
+          onOpenFollowers={() => setFollowModalType("followers")}
+          onOpenFollowing={() => setFollowModalType("following")}
           onRemovePicture={handleRemovePicture}
           onSavePicture={handleSavePicture}
         />
@@ -514,6 +518,14 @@ const Dashboard = () => {
           ) : null}
         </section>
       </div>
+
+      {followModalType ? (
+        <FollowListModal
+          type={followModalType}
+          userId={user?._id}
+          onClose={() => setFollowModalType("")}
+        />
+      ) : null}
     </main>
   );
 };

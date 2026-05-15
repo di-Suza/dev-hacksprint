@@ -1,6 +1,7 @@
 const Blog = require("../models/blog.model");
 const Likes = require("../models/like.model");
 const Project = require("../models/project.model");
+const notificationServices = require("./notification.service");
 const { AppError } = require("../utilities/appError");
 
 const contentConfig = {
@@ -44,7 +45,11 @@ async function getLikeCount(config, contentId) {
 }
 
 module.exports.likeContent = async (userId, contentType, contentId) => {
-  const { config } = await getContentOrThrow(contentType, contentId, userId);
+  const { config, content } = await getContentOrThrow(
+    contentType,
+    contentId,
+    userId,
+  );
 
   try {
     await Likes.create({
@@ -73,6 +78,14 @@ module.exports.likeContent = async (userId, contentType, contentId) => {
     )
     .lean();
 
+  await notificationServices.send({
+    senderId: userId,
+    recipientId: content.user,
+    type: "LIKE",
+    contentId,
+    onModel: config.modelName,
+  });
+
   return {
     isLiked: true,
     likeCount: updatedContent?.likeCount || 0,
@@ -80,7 +93,11 @@ module.exports.likeContent = async (userId, contentType, contentId) => {
 };
 
 module.exports.unlikeContent = async (userId, contentType, contentId) => {
-  const { config } = await getContentOrThrow(contentType, contentId, userId);
+  const { config, content } = await getContentOrThrow(
+    contentType,
+    contentId,
+    userId,
+  );
 
   const deletedLike = await Likes.findOneAndDelete({
     content: contentId,
@@ -102,6 +119,13 @@ module.exports.unlikeContent = async (userId, contentType, contentId) => {
       { new: true, select: "likeCount" },
     )
     .lean();
+
+  await notificationServices.remove({
+    senderId: userId,
+    recipientId: content.user,
+    type: "LIKE",
+    contentId,
+  });
 
   return {
     isLiked: false,

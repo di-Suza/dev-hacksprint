@@ -6,6 +6,8 @@ function ProfileSidebar({
   previewUrl,
   selectedFileName,
   onFileChange,
+  onOpenFollowers,
+  onOpenFollowing,
   onRemovePicture,
   onSavePicture,
 }) {
@@ -13,8 +15,18 @@ function ProfileSidebar({
   const stats = [
     { label: "Blogs", value: user?.blogsCount || 0, icon: FileText },
     { label: "Projects", value: user?.projectsCount || 0, icon: FolderGit2 },
-    { label: "Followers", value: user?.followersCount || 0, icon: UsersRound },
-    { label: "Following", value: user?.followingCount || 0, icon: UsersRound },
+    {
+      action: onOpenFollowers,
+      label: "Followers",
+      value: user?.followersCount || 0,
+      icon: UsersRound,
+    },
+    {
+      action: onOpenFollowing,
+      label: "Following",
+      value: user?.followingCount || 0,
+      icon: UsersRound,
+    },
   ];
 
   return (
@@ -76,15 +88,18 @@ function ProfileSidebar({
       <div className="mt-7 grid grid-cols-2 gap-3">
         {stats.map((stat) => {
           const Icon = stat.icon;
+          const Component = stat.action ? "button" : "div";
           return (
-            <div
-              className="rounded-xl border border-(--color-border) bg-(--color-bg) p-4"
+            <Component
+              className="rounded-xl border border-(--color-border) bg-(--color-bg) p-4 text-left transition hover:border-(--color-border-strong)"
               key={stat.label}
+              type={stat.action ? "button" : undefined}
+              onClick={stat.action}
             >
               <Icon className="text-(--color-accent)" size={17} aria-hidden="true" />
               <strong className="mt-3 block text-2xl">{stat.value}</strong>
               <span className="text-xs text-(--color-muted)">{stat.label}</span>
-            </div>
+            </Component>
           );
         })}
       </div>
