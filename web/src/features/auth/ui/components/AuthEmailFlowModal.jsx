@@ -94,7 +94,7 @@ function AuthEmailFlowModal({ email, userName, open, password, onOpenChange }) {
               />
             </div>
 
-            <Button className="w-full" disabled={otp.length < 4 || isLoading} type="submit">
+            <Button className="w-full" disabled={otp.length !== 6 || isLoading} type="submit">
               <Check size={16} aria-hidden="true" />
               {isLoading ? "Creating account..." : "Verify & Create Account"}
             </Button>

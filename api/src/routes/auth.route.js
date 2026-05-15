@@ -7,9 +7,6 @@ const {
   sendOtpSchema,
   verifyAndRegisterSchema,
   loginSchema,
-  emailSchema,
-  emailAndOtpSchema,
-  newPasswordAndToken,
 } = require("../validations/auth.validation");
 
 const authRouter = express.Router();
@@ -40,26 +37,6 @@ authRouter
   .post("/logout",isAuthenticated, controller.logout)
 
   // google login/register
-  .post("/google", ipLimiter(), controller.google)
-
-  // Forgot Password - send OTP/ verify OTP/ update Password
-  .post(
-    "/sendOtpForForgotPassword",
-    ipLimiter(),
-    validate(emailSchema),
-    controller.sendOtpForForgotPassword,
-  )
-  .post(
-    "/verifyOtpForForgotPassword",
-    ipLimiter(),
-    validate(emailAndOtpSchema),
-    controller.verifyOtpForForgotPassword,
-  )
-  .post(
-    "/updateNewPassword_ForgotPassword",
-    ipLimiter(),
-    validate(newPasswordAndToken),
-    controller.updateNewPassword_ForgotPassword,
-  );
+  .post("/google", ipLimiter(), controller.google);
 
 module.exports = authRouter;

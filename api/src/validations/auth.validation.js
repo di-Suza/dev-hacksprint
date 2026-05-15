@@ -1,4 +1,4 @@
-const { z, email } = require("zod");
+const { z } = require("zod");
 
 const emailV = z.string().email("Invalid email address").trim().toLowerCase();
 const password = z.string().min(8, "Password must be at least 8 chars");
@@ -11,9 +11,6 @@ const userName = z
   .min(3, "Too short")
   .trim()
   .transform((v) => v.replace(/\s+/g, " "));
-const token = z.string().jwt();
-
-const emailSchema = z.object({ body: z.object({ email: emailV }) });
 const loginSchema = z.object({ body: z.object({ email: emailV, password }) });
 const sendOtpSchema = z.object({
   body: z.object({ email: emailV }),
@@ -21,17 +18,8 @@ const sendOtpSchema = z.object({
 const verifyAndRegisterSchema = z.object({
   body: z.object({ email: emailV, password, userName, otp }),
 });
-const emailAndOtpSchema = z.object({ body: z.object({ email: emailV, otp }) });
-const newPasswordAndToken = z.object({
-  body: z.object({ newPassword: password, token }),
-});
-
-
 module.exports = {
   sendOtpSchema,
   verifyAndRegisterSchema,
   loginSchema,
-  emailSchema,
-  emailAndOtpSchema,
-  newPasswordAndToken,
 };

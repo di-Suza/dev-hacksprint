@@ -2,7 +2,7 @@ const sendAuthCookies = (res, accessToken, refreshToken) => {
   const commonOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "Strict",
+    sameSite: "None",
   };
 
   res.cookie("accessToken", accessToken, {

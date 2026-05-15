@@ -17,7 +17,7 @@ module.exports.refreshToken = catchAsync(async (req, res, next) => {
     res.cookie("accessToken", newAccessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
+      sameSite: "None",
       maxAge: 15 * 60 * 1000,
     });
     res.status(200).json({ success: true, message: "Session Renewed!" });
@@ -27,7 +27,7 @@ module.exports.refreshToken = catchAsync(async (req, res, next) => {
 });
 
 module.exports.sendOtp = catchAsync(async (req, res) => {
-  let { userName, email, password } = req.body;
+  const { email } = req.body;
 
   let updatedRemainingOtpCounts = await authServices.sendRegistrationOtp(email);
 
@@ -96,7 +96,7 @@ module.exports.logout = catchAsync(async (req, res) => {
   const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "Strict",
+    sameSite: "None",
   };
   return res
     .status(200)
@@ -125,60 +125,3 @@ module.exports.google = catchAsync(async (req, res) => {
       user,
     });
 });
-
-module.exports.sendOtpForForgotPassword = catchAsync(async (req, res) => {
-  let { email } = req.body;
-
-  let updatedRemainingOtpCounts =
-    await authServices.sendForgotPasswordOtp(email);
-
-  // Success Response
-  return res.status(201).json({
-    success: true,
-    message: `OTP sent on ${email}!`,
-    data: {
-      email,
-      remainingAttempts: 3 - updatedRemainingOtpCounts,
-      expiresIn: "10 minutes",
-    },
-  });
-});
-
-module.exports.verifyOtpForForgotPassword = catchAsync(async (req, res) => {
-  let { email, token } = await authServices.verifyForgotPasswordOtp(req.body);
-
-  return res.status(200).json({
-    success: true,
-    message: "OTP Verified!",
-    email,
-    token,
-  });
-});
-
-module.exports.updateNewPassword_ForgotPassword = catchAsync(
-  async (req, res, next) => {
-    let { token, newPassword } = req.body;
-
-    // token verification
-    let { data } = await verifyToken(token);
-
-    let user = await Users.findOne({ _id: data.userId, email: data.email });
-    if (!user) {
-      return next(new AppError("User Not Found!", 404));
-    }
-    if (data.purpose !== "forgot-password") {
-      return next(new AppError("Bad Request", 400));
-    }
-
-    await userServices.updateUserAccountPassword(user._id, newPassword);
-
-    res.status(200).json({
-      success: true,
-      message: "Password Updated Successfully!",
-      user,
-    });
-  },
-);
-
-// Localhost par: sameSite: "lax" aur secure: false rakho.
-// Production par: sameSite: "none" aur secure: true rakho.

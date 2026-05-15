@@ -4,11 +4,6 @@ const { AppError } = require("../utilities/appError");
 const { generateHash, compareHash } = require("../utilities/password");
 const redis = require("../config/connectToRedis");
 const imagekit = require("../utilities/imageKit");
-// const Follows = require("../models/follow.model");
-// const Likes = require("../models/like.model");
-// const Comments = require("../models/comment.model");
-// const Messages = require("../models/message.model");
-// const userCleanupQueue = require("../Queues/userCleanup/userCleanupQueue");
 const notificationServices = require("../services/notification.service");
 
 module.exports.updateUserAccountPassword = async (userId, newPassword) => {
