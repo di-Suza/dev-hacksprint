@@ -3,6 +3,7 @@ const { verifyToken } = require("../utilities/token");
 const { AppError } = require("../utilities/appError");
 const { catchAsync } = require("../utilities/catchAsync");
 const sendAuthCookies = require("../utilities/cookies");
+const { getAuthCookieOptions } = require("../utilities/cookies");
 
 //services
 const authServices = require("../services/auth.service");
@@ -15,10 +16,7 @@ module.exports.refreshToken = catchAsync(async (req, res, next) => {
   try {
     const newAccessToken = await authServices.getRefreshToken(token);
     res.cookie("accessToken", newAccessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "None",
-      maxAge: 15 * 60 * 1000,
+      ...getAuthCookieOptions(req, 15 * 60 * 1000),
     });
     res.status(200).json({ success: true, message: "Session Renewed!" });
   } catch (err) {
@@ -47,7 +45,7 @@ module.exports.verifyAndRegister = catchAsync(async (req, res) => {
   const { user, accessToken, refreshToken } =
     await authServices.verifyOtpAndRegister(req.body);
 
-  sendAuthCookies(res, accessToken, refreshToken);
+  sendAuthCookies(req, res, accessToken, refreshToken);
 
   return res.status(201).json({
     success: true,
@@ -61,7 +59,7 @@ module.exports.login = catchAsync(async (req, res) => {
     req.body,
   );
 
-  sendAuthCookies(res, accessToken, refreshToken);
+  sendAuthCookies(req, res, accessToken, refreshToken);
 
   res.status(200).json({
     success: true,
@@ -93,11 +91,7 @@ module.exports.logout = catchAsync(async (req, res) => {
 
   await redisServices.deleteUserFromRedis(userId);
 
-  const cookieOptions = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "None",
-  };
+  const cookieOptions = getAuthCookieOptions(req);
   return res
     .status(200)
     .clearCookie("accessToken", cookieOptions)
@@ -114,7 +108,7 @@ module.exports.google = catchAsync(async (req, res) => {
   const { user, accessToken, refreshToken } =
     await authServices.googleSign(code);
 
-  sendAuthCookies(res, accessToken, refreshToken);
+  sendAuthCookies(req, res, accessToken, refreshToken);
   return res
     .status(user.isNew ? 201 : 200) // 201 if created, 200 if
     .json({

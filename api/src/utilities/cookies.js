@@ -1,18 +1,29 @@
-const sendAuthCookies = (res, accessToken, refreshToken) => {
-  const commonOptions = {
+function getAuthCookieOptions(req, maxAge) {
+  const isHttps =
+    req.secure || req.headers["x-forwarded-proto"] === "https";
+
+  const options = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "None",
+    secure: isHttps,
+    sameSite: isHttps ? "None" : "Lax",
   };
 
+  if (maxAge) {
+    options.maxAge = maxAge;
+  }
+
+  return options;
+}
+
+const sendAuthCookies = (req, res, accessToken, refreshToken) => {
   res.cookie("accessToken", accessToken, {
-    ...commonOptions,
-    maxAge: 15 * 60 * 1000,
+    ...getAuthCookieOptions(req, 15 * 60 * 1000),
   });
 
   res.cookie("refreshToken", refreshToken, {
-    ...commonOptions,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    ...getAuthCookieOptions(req, 7 * 24 * 60 * 60 * 1000),
   });
 };
+
 module.exports = sendAuthCookies;
+module.exports.getAuthCookieOptions = getAuthCookieOptions;

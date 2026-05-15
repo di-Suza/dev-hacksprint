@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 
 const allRoutes = require("./routes/index");
 
@@ -15,7 +16,10 @@ app.use(cookieParser());
 
 const allowedOrigins = [
   process.env.CLIENT_URL,
+  process.env.SERVER_URL,
+  "https://dev-hacksprint.onrender.com",
   "https://devhacksprint.netlify.app",
+  "http://localhost:8080",
   "http://localhost:5173",
 ].filter(Boolean);
 
@@ -33,6 +37,12 @@ app.use(
 
 // all routes
 app.use("/api", allRoutes);
+
+const viewPath = path.join(__dirname, "..", "view");
+app.use(express.static(viewPath));
+app.get(/^(?!\/api).*/, (req, res) => {
+  res.sendFile(path.join(viewPath, "index.html"));
+});
 
 //global error
 app.use(globalErrorHandler);

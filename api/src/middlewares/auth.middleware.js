@@ -2,6 +2,7 @@ const { verifyToken } = require("../utilities/token");
 const Users = require("../models/user.model");
 const { AppError } = require("../utilities/appError");
 const { catchAsync } = require("../utilities/catchAsync");
+const { getAuthCookieOptions } = require("../utilities/cookies");
 const redis = require("../config/connectToRedis");
 
 module.exports.isAuthenticated = catchAsync(async (req, res, next) => {
@@ -37,11 +38,7 @@ module.exports.isAuthenticated = catchAsync(async (req, res, next) => {
       req.user = user;
     }
     if (!req.user) {
-      let options = {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "None",
-      };
+      const options = getAuthCookieOptions(req);
       res.clearCookie("accessToken", options);
       res.clearCookie("refreshToken", options);
       return next(new AppError("User not found.", 404));

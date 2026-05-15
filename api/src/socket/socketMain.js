@@ -5,7 +5,10 @@ let io;
 const initSocket = (server) => {
   const allowedOrigins = [
     process.env.CLIENT_URL,
+    process.env.SERVER_URL,
+    "https://dev-hacksprint.onrender.com",
     "https://devhacksprint.netlify.app",
+    "http://localhost:8080",
     "http://localhost:5173",
   ].filter(Boolean);
 

@@ -1,7 +1,6 @@
 import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-const url =
-  import.meta.env.VITE_API_URL || "https://dev-hacksprint.onrender.com/api";
+const url = import.meta.env.VITE_API_URL || "/api";
 
 export const baseQuery = fetchBaseQuery({
   baseUrl: url,
