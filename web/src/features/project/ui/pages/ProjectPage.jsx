@@ -6,54 +6,40 @@ import {
   Heart,
   Image,
   MessageCircle,
-  MoreHorizontal,
 } from "lucide-react";
-import { useState } from "react";
-import { Link, useParams } from "react-router";
+import { Link } from "react-router";
 
 import CommentModal from "../../../comment/ui/components/CommentModal";
-import { useDebouncedLike } from "../../../like/hooks/useDebouncedLike";
+import BackButton from "../../../../shared/components/BackButton";
 import { formatRelativeTime } from "../../../../shared/utils/formatRelativeTime";
-import { useGetProjectByIdQuery } from "../../api/project.api";
+import useProjectPage from "./useProjectPage";
 
 function ProjectPage() {
-  const { id } = useParams();
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
-  const { data, error, isError, isLoading, refetch } =
-    useGetProjectByIdQuery(id, {
-      skip: !id,
-    });
-
-  const project = data?.project;
-  const images = project?.images || [];
-  const activeImage = images[activeImageIndex]?.url;
-  const author = project?.user;
-  const authorPicture = author?.profilePicture?.url;
-  const hasMultipleImages = images.length > 1;
-  const projectLike = useDebouncedLike({
-    contentId: project?._id,
-    contentType: "project",
-    isLiked: project?.isLiked,
-    likeCount: project?.likeCount,
-  });
-
-  function showPreviousImage() {
-    setActiveImageIndex((current) =>
-      current === 0 ? images.length - 1 : current - 1
-    );
-  }
-
-  function showNextImage() {
-    setActiveImageIndex((current) =>
-      current === images.length - 1 ? 0 : current + 1
-    );
-  }
+  const {
+    activeImage,
+    activeImageIndex,
+    author,
+    authorPicture,
+    error,
+    hasMultipleImages,
+    images,
+    isCommentModalOpen,
+    isError,
+    isLoading,
+    project,
+    projectLike,
+    refetch,
+    setActiveImageIndex,
+    setIsCommentModalOpen,
+    showNextImage,
+    showPreviousImage,
+  } = useProjectPage();
 
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-(--color-bg) px-5 py-8 text-(--color-text)">
-        <div className="mx-auto max-w-5xl rounded-2xl border border-(--color-border) bg-(--color-surface) p-6">
+      <main className="app-page px-5 py-8">
+        <div className="app-panel mx-auto max-w-5xl rounded-2xl p-6">
+          <BackButton className="mb-4" />
           <div className="h-12 w-52 animate-pulse rounded-xl bg-(--color-surface-strong)" />
           <div className="mt-5 aspect-video animate-pulse rounded-2xl bg-(--color-surface-strong)" />
           <div className="mt-5 h-8 w-2/3 animate-pulse rounded-lg bg-(--color-surface-strong)" />
@@ -65,8 +51,8 @@ function ProjectPage() {
 
   if (isError || !project) {
     return (
-      <main className="grid min-h-screen place-items-center bg-(--color-bg) px-5 py-8 text-(--color-text)">
-        <section className="w-full max-w-md rounded-2xl border border-(--color-border) bg-(--color-surface) p-6 text-center">
+      <main className="app-page grid place-items-center px-5 py-8">
+        <section className="app-panel w-full max-w-md rounded-2xl p-6 text-center">
           <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-(--color-surface-strong) text-(--color-danger)">
             !
           </div>
@@ -87,8 +73,11 @@ function ProjectPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_22%_0%,rgba(112,241,201,0.08),transparent_24%),var(--color-bg)] px-5 py-8 text-(--color-text)">
-      <article className="mx-auto max-w-5xl overflow-hidden rounded-2xl border border-(--color-border) bg-(--color-surface) shadow-[0_24px_90px_rgba(0,0,0,0.35)]">
+    <main className="app-page px-5 py-8">
+      <div className="mx-auto mb-4 max-w-5xl">
+        <BackButton />
+      </div>
+      <article className="app-panel mx-auto max-w-5xl overflow-hidden rounded-2xl">
         <header className="flex items-center justify-between gap-4 border-b border-(--color-border) px-4 py-4 sm:px-5">
           <Link
             className="flex min-w-0 items-center gap-3"
@@ -117,19 +106,11 @@ function ProjectPage() {
               </p>
             </div>
           </Link>
-
-          <button
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-(--color-border) text-(--color-muted) transition hover:border-(--color-border-strong) hover:text-(--color-text)"
-            type="button"
-          >
-            <MoreHorizontal size={20} aria-hidden="true" />
-            <span className="sr-only">Project options</span>
-          </button>
         </header>
 
         <section className="grid lg:grid-cols-[1.1fr_0.9fr]">
           <div className="border-b border-(--color-border) lg:border-b-0 lg:border-r">
-            <div className="relative grid aspect-[4/3] max-h-[720px] min-h-[320px] place-items-center bg-black">
+            <div className="media-frame relative grid aspect-[4/3] max-h-[720px] min-h-[320px] place-items-center">
               {activeImage ? (
                 <img
                   alt={project.title}
@@ -228,7 +209,7 @@ function ProjectPage() {
               <div className="mt-6 flex flex-wrap gap-2">
                 {project.tags.map((tag) => (
                   <span
-                    className="rounded-full border border-(--color-border) bg-(--color-bg) px-3 py-1.5 text-xs font-semibold text-(--color-muted)"
+                    className="app-chip rounded-full px-3 py-1.5 text-xs font-semibold"
                     key={tag}
                   >
                     #{tag}
@@ -240,7 +221,7 @@ function ProjectPage() {
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               {project.githubLink ? (
                 <a
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-(--color-border) bg-(--color-surface-strong) px-4 py-3 text-sm font-bold transition hover:border-(--color-border-strong)"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-(--color-border) bg-(--color-surface-strong) px-4 py-3 text-sm font-bold transition hover:-translate-y-0.5 hover:border-(--color-border-strong)"
                   href={project.githubLink}
                   rel="noreferrer"
                   target="_blank"
@@ -252,7 +233,7 @@ function ProjectPage() {
 
               {project.liveLink ? (
                 <a
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-(--color-text) px-4 py-3 text-sm font-bold text-(--color-bg) transition hover:bg-white"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-(--color-accent) bg-(--color-accent) px-4 py-3 text-sm font-black text-black transition hover:-translate-y-0.5 hover:opacity-90"
                   href={project.liveLink}
                   rel="noreferrer"
                   target="_blank"

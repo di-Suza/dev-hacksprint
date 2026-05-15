@@ -1,36 +1,33 @@
 import MDEditor from "@uiw/react-md-editor";
 import "@uiw/react-md-editor/markdown-editor.css";
 import "@uiw/react-markdown-preview/markdown.css";
-import { Heart, MessageCircle, MoreHorizontal } from "lucide-react";
-import { useState } from "react";
-import { Link, useParams } from "react-router";
+import { Heart, MessageCircle } from "lucide-react";
+import { Link } from "react-router";
 
 import CommentModal from "../../../comment/ui/components/CommentModal";
-import { useDebouncedLike } from "../../../like/hooks/useDebouncedLike";
+import BackButton from "../../../../shared/components/BackButton";
 import { formatRelativeTime } from "../../../../shared/utils/formatRelativeTime";
-import { useGetBlogByIdQuery } from "../../api/blog.api";
+import useBlogPage from "./useBlogPage";
 
 function BlogPage() {
-  const { id } = useParams();
-  const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
-  const { data, error, isError, isLoading, refetch } = useGetBlogByIdQuery(id, {
-    skip: !id,
-  });
-
-  const blog = data?.blog;
-  const author = blog?.user;
-  const authorPicture = author?.profilePicture?.url;
-  const blogLike = useDebouncedLike({
-    contentId: blog?._id,
-    contentType: "blog",
-    isLiked: blog?.isLiked,
-    likeCount: blog?.likeCount,
-  });
+  const {
+    author,
+    authorPicture,
+    blog,
+    blogLike,
+    error,
+    isCommentModalOpen,
+    isError,
+    isLoading,
+    refetch,
+    setIsCommentModalOpen,
+  } = useBlogPage();
 
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-(--color-bg) px-5 py-8 text-(--color-text)">
-        <div className="mx-auto max-w-4xl rounded-2xl border border-(--color-border) bg-(--color-surface) p-6">
+      <main className="app-page px-5 py-8">
+        <div className="app-panel mx-auto max-w-4xl rounded-2xl p-6">
+          <BackButton className="mb-4" />
           <div className="h-12 w-52 animate-pulse rounded-xl bg-(--color-surface-strong)" />
           <div className="mt-8 h-12 w-3/4 animate-pulse rounded-xl bg-(--color-surface-strong)" />
           <div className="mt-5 h-72 animate-pulse rounded-2xl bg-(--color-surface-strong)" />
@@ -41,8 +38,8 @@ function BlogPage() {
 
   if (isError || !blog) {
     return (
-      <main className="grid min-h-screen place-items-center bg-(--color-bg) px-5 py-8 text-(--color-text)">
-        <section className="w-full max-w-md rounded-2xl border border-(--color-border) bg-(--color-surface) p-6 text-center">
+      <main className="app-page grid place-items-center px-5 py-8">
+        <section className="app-panel w-full max-w-md rounded-2xl p-6 text-center">
           <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-(--color-surface-strong) text-(--color-danger)">
             !
           </div>
@@ -63,8 +60,11 @@ function BlogPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_22%_0%,rgba(112,241,201,0.08),transparent_24%),var(--color-bg)] px-5 py-8 text-(--color-text)">
-      <article className="mx-auto max-w-4xl overflow-hidden rounded-2xl border border-(--color-border) bg-(--color-surface) shadow-[0_24px_90px_rgba(0,0,0,0.35)]">
+    <main className="app-page px-5 py-8">
+      <div className="mx-auto mb-4 max-w-4xl">
+        <BackButton />
+      </div>
+      <article className="app-panel mx-auto max-w-4xl overflow-hidden rounded-2xl">
         <header className="flex items-center justify-between gap-4 border-b border-(--color-border) px-4 py-4 sm:px-5">
           <Link
             className="flex min-w-0 items-center gap-3"
@@ -93,21 +93,13 @@ function BlogPage() {
               </p>
             </div>
           </Link>
-
-          <button
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-(--color-border) text-(--color-muted) transition hover:border-(--color-border-strong) hover:text-(--color-text)"
-            type="button"
-          >
-            <MoreHorizontal size={20} aria-hidden="true" />
-            <span className="sr-only">Blog options</span>
-          </button>
         </header>
 
         <section className="p-5 sm:p-7">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
             {!blog.isPublished ? (
-              <span className="mb-4 inline-flex rounded-full bg-(--color-bg) px-3 py-1.5 text-xs font-bold text-(--color-warn)">
+              <span className="app-chip mb-4 inline-flex rounded-full px-3 py-1.5 text-xs font-bold text-(--color-warn)">
                 Draft preview
               </span>
             ) : null}
@@ -119,7 +111,7 @@ function BlogPage() {
               <div className="mt-5 flex flex-wrap gap-2">
                 {blog.categories.map((category) => (
                   <span
-                    className="rounded-full border border-(--color-border) bg-(--color-bg) px-3 py-1.5 text-xs font-semibold text-(--color-muted)"
+                    className="app-chip rounded-full px-3 py-1.5 text-xs font-semibold"
                     key={category}
                   >
                     #{category}
@@ -162,7 +154,7 @@ function BlogPage() {
           </div>
 
           <div
-            className="mt-8 rounded-2xl border border-(--color-border) bg-(--color-bg) p-4 sm:p-6"
+            className="mt-8 rounded-2xl border border-(--color-border) bg-(--color-bg)/70 p-4 shadow-inner sm:p-6"
             data-color-mode="dark"
           >
             <MDEditor.Markdown

@@ -7,11 +7,11 @@ import {
   Trash2,
   UserRound,
 } from "lucide-react";
-import { useEffect, useState } from "react";
 
 import { Button } from "../../../../shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../shared/components/ui/card";
 import { Input } from "../../../../shared/components/ui/input";
+import useArrayInput from "./useArrayInput";
 
 function Field({ children, label }) {
   return (
@@ -25,7 +25,7 @@ function Field({ children, label }) {
 function Textarea({ value, onChange, placeholder, rows = 5 }) {
   return (
     <textarea
-      className="min-h-28 w-full resize-y rounded-lg border border-(--color-border) bg-(--color-surface) px-3 py-3 text-sm text-(--color-text) outline-none transition placeholder:text-(--color-muted) focus:border-(--color-border-strong) focus:bg-(--color-surface-strong) focus:ring-2 focus:ring-white/5"
+      className="min-h-28 w-full resize-y rounded-lg border border-(--color-border) bg-(--color-surface) px-3 py-3 text-sm text-(--color-text) shadow-sm outline-none transition placeholder:text-(--color-muted) focus:border-(--color-accent) focus:bg-(--color-surface-strong) focus:ring-2 focus:ring-[var(--ring-soft)]"
       placeholder={placeholder}
       rows={rows}
       value={value}
@@ -49,49 +49,17 @@ function SectionTitle({ icon: Icon, title, description }) {
 }
 
 function ArrayInput({ label, value, onChange, placeholder }) {
-  const [draft, setDraft] = useState("");
-
-  useEffect(() => {
-    setDraft("");
-  }, [value.length]);
-
-  function addDraftItems(rawValue = draft) {
-    const nextItems = rawValue
-        .split(",")
-        .map((item) => item.trim())
-      .filter(Boolean);
-
-    if (!nextItems.length) return;
-
-    const existing = new Set(value.map((item) => item.toLowerCase()));
-    const merged = [
-      ...value,
-      ...nextItems.filter((item) => !existing.has(item.toLowerCase())),
-    ];
-
-    onChange(merged);
-    setDraft("");
-  }
-
-  function removeItem(itemToRemove) {
-    onChange(value.filter((item) => item !== itemToRemove));
-  }
-
-  function handleKeyDown(event) {
-    if (event.key === "Enter" || event.key === ",") {
-      event.preventDefault();
-      addDraftItems();
-    }
-  }
+  const { addDraftItems, draft, handleKeyDown, removeItem, setDraft } =
+    useArrayInput({ onChange, value });
 
   return (
     <Field label={label}>
-      <div className="rounded-lg border border-(--color-border) bg-(--color-surface) p-2 transition focus-within:border-(--color-border-strong) focus-within:bg-(--color-surface-strong) focus-within:ring-2 focus-within:ring-white/5">
+      <div className="rounded-lg border border-(--color-border) bg-(--color-surface) p-2 shadow-sm transition focus-within:border-(--color-accent) focus-within:bg-(--color-surface-strong) focus-within:ring-2 focus-within:ring-[var(--ring-soft)]">
         {value.length ? (
           <div className="mb-2 flex flex-wrap gap-2">
             {value.map((item) => (
               <button
-                className="rounded-full border border-[rgba(112,241,201,0.32)] bg-[rgba(112,241,201,0.08)] px-3 py-1 text-xs font-semibold text-(--color-text) transition hover:border-(--color-accent)"
+                className="app-chip rounded-full px-3 py-1 text-xs font-semibold text-(--color-text) transition hover:border-(--color-accent)"
                 key={item}
                 type="button"
                 onClick={() => removeItem(item)}
@@ -258,7 +226,7 @@ function ProfileEditor({
 
   return (
     <div className="grid gap-5">
-      <Card className="bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.016))]">
+      <Card className="app-card">
         <CardHeader>
           <SectionTitle
             icon={UserRound}
@@ -305,7 +273,7 @@ function ProfileEditor({
         </CardContent>
       </Card>
 
-      <Card className="bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.016))]">
+      <Card className="app-card">
         <CardHeader>
           <SectionTitle
             icon={BriefcaseBusiness}
@@ -366,7 +334,7 @@ function ProfileEditor({
         </CardContent>
       </Card>
 
-      <Card className="bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.016))]">
+      <Card className="app-card">
         <CardHeader>
           <SectionTitle
             icon={Link2}

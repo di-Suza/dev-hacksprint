@@ -2,7 +2,7 @@ import { cn } from "../../utils/cn";
 
 const variants = {
   default:
-    "border-(--color-text) bg-(--color-text) text-(--color-bg) hover:bg-white",
+    "border-(--color-text) bg-(--color-text) text-(--color-bg) shadow-sm hover:opacity-90",
   outline:
     "border-(--color-border) bg-(--color-surface) text-(--color-text) hover:border-(--color-border-strong) hover:bg-(--color-surface-strong)",
   ghost:

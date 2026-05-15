@@ -1,31 +1,14 @@
 import { X } from "lucide-react";
 import { Link } from "react-router";
 
-import {
-  useGetFollowersQuery,
-  useGetFollowingQuery,
-} from "../../api/profile.api";
+import useFollowListModal from "./useFollowListModal";
 
 function FollowListModal({ onClose, type, userId }) {
-  const isFollowers = type === "followers";
-  const title = isFollowers ? "Followers" : "Following";
-  const followersQuery = useGetFollowersQuery(
-    { page: 1, userId },
-    { skip: !userId || !isFollowers },
-  );
-  const followingQuery = useGetFollowingQuery(
-    { page: 1, userId },
-    { skip: !userId || isFollowers },
-  );
-  const activeQuery = isFollowers ? followersQuery : followingQuery;
-  const users =
-    (isFollowers
-      ? activeQuery.data?.followers
-      : activeQuery.data?.following) || [];
+  const { activeQuery, title, users } = useFollowListModal({ type, userId });
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 px-4 backdrop-blur-sm">
-      <section className="flex h-[70vh] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-(--color-border) bg-(--color-surface) text-(--color-text) shadow-2xl">
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/55 px-4 backdrop-blur-md">
+      <section className="app-panel flex h-[70vh] w-full max-w-md flex-col overflow-hidden rounded-2xl text-(--color-text)">
         <header className="flex items-center justify-between border-b border-(--color-border) px-5 py-4">
           <div>
             <h2 className="text-xl font-black">{title}</h2>

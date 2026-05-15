@@ -2,10 +2,10 @@ import MDEditor from "@uiw/react-md-editor";
 import "@uiw/react-md-editor/markdown-editor.css";
 import "@uiw/react-markdown-preview/markdown.css";
 import { FileText, Send, X } from "lucide-react";
-import { useState } from "react";
 
 import { Button } from "../../../../shared/components/ui/button";
 import { Input } from "../../../../shared/components/ui/input";
+import useAddBlogForm from "./useAddBlogForm";
 
 function AddBlogForm({
   initialBlog = null,
@@ -13,76 +13,22 @@ function AddBlogForm({
   onClose,
   onSubmit,
 }) {
-  const [title, setTitle] = useState(initialBlog?.title || "");
-  const [content, setContent] = useState(initialBlog?.content || "");
-  const [categories, setCategories] = useState(initialBlog?.categories || []);
-  const [categoryDraft, setCategoryDraft] = useState("");
-
-  function addCategoriesFromText(value) {
-    const nextCategories = value
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
-
-    if (!nextCategories.length) return;
-
-    setCategories((current) => {
-      const existing = new Set(current.map((category) => category.toLowerCase()));
-      const freshCategories = nextCategories.filter(
-        (category) => !existing.has(category.toLowerCase()),
-      );
-      return [...current, ...freshCategories].slice(0, 10);
-    });
-  }
-
-  function handleCategoryChange(event) {
-    const value = event.target.value;
-
-    if (!value.includes(",")) {
-      setCategoryDraft(value);
-      return;
-    }
-
-    const parts = value.split(",");
-    const remainingText = parts.pop() || "";
-    addCategoriesFromText(parts.join(","));
-    setCategoryDraft(remainingText.trimStart());
-  }
-
-  function handleCategoryKeyDown(event) {
-    if (event.key === "Enter" || event.key === ",") {
-      event.preventDefault();
-      addCategoriesFromText(categoryDraft);
-      setCategoryDraft("");
-      return;
-    }
-
-    if (event.key === "Backspace" && !categoryDraft && categories.length) {
-      setCategories((current) => current.slice(0, -1));
-    }
-  }
-
-  function removeCategory(categoryToRemove) {
-    setCategories((current) =>
-      current.filter((category) => category !== categoryToRemove),
-    );
-  }
-
-  function handleSubmit(isPublished) {
-    const nextCategories = [...categories, categoryDraft.trim()].filter(Boolean);
-    addCategoriesFromText(categoryDraft);
-
-    onSubmit({
-      title: title.trim(),
-      content: content.trim(),
-      categories: nextCategories.join(","),
-      isPublished,
-    });
-  }
+  const {
+    categories,
+    categoryDraft,
+    content,
+    handleCategoryChange,
+    handleCategoryKeyDown,
+    handleSubmit,
+    removeCategory,
+    setContent,
+    setTitle,
+    title,
+  } = useAddBlogForm({ initialBlog, onSubmit });
 
   return (
     <form
-      className="mb-5 grid gap-4 rounded-2xl border border-(--color-border) bg-(--color-surface) p-5"
+      className="app-panel mb-5 grid gap-4 rounded-2xl p-5"
       onSubmit={(event) => event.preventDefault()}
     >
       <div className="flex items-start justify-between gap-4">

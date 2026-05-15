@@ -5,12 +5,12 @@ function ProjectCard({ isDeleting, onDelete, onEdit, project }) {
   const coverImage = project?.images?.[0]?.url;
 
   return (
-    <article className="flex h-full min-h-[430px] flex-col overflow-hidden rounded-2xl border border-(--color-border) bg-(--color-surface)">
-      <div className="relative h-52 shrink-0 overflow-hidden bg-(--color-bg)">
+    <article className="app-card flex h-full min-h-[430px] flex-col overflow-hidden rounded-2xl">
+      <div className="media-frame relative h-52 shrink-0 overflow-hidden">
         <div className="absolute right-3 top-3 z-10 flex gap-2">
           <button
             aria-label={`Edit ${project.title}`}
-            className="grid h-9 w-9 place-items-center rounded-lg border border-(--color-border) bg-black/70 text-white backdrop-blur transition hover:border-(--color-border-strong) hover:bg-(--color-surface-strong)"
+            className="grid h-9 w-9 place-items-center rounded-lg border border-(--color-border) bg-(--color-surface)/90 text-(--color-text) backdrop-blur transition hover:border-(--color-border-strong) hover:bg-(--color-surface-strong)"
             type="button"
             onClick={() => onEdit?.(project)}
           >
@@ -18,7 +18,7 @@ function ProjectCard({ isDeleting, onDelete, onEdit, project }) {
           </button>
           <button
             aria-label={`Delete ${project.title}`}
-            className="grid h-9 w-9 place-items-center rounded-lg border border-red-500/30 bg-black/70 text-red-300 backdrop-blur transition hover:border-red-400/70 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+            className="grid h-9 w-9 place-items-center rounded-lg border border-red-500/30 bg-(--color-surface)/90 text-red-300 backdrop-blur transition hover:border-red-400/70 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-60"
             disabled={isDeleting}
             type="button"
             onClick={() => onDelete?.(project)}
@@ -53,7 +53,7 @@ function ProjectCard({ isDeleting, onDelete, onEdit, project }) {
             <div className="flex flex-wrap gap-2">
             {project.tags.slice(0, 4).map((tag) => (
               <span
-                className="rounded-full border border-(--color-border) px-2.5 py-1 text-xs text-(--color-muted)"
+                className="app-chip rounded-full px-2.5 py-1 text-xs"
                 key={tag}
               >
                 {tag}

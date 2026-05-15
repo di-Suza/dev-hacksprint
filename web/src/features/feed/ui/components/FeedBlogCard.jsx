@@ -22,10 +22,10 @@ function FeedBlogCard({ blog, onComment }) {
   });
 
   return (
-    <article className="rounded-2xl border border-(--color-border) bg-(--color-surface)">
+    <article className="app-card rounded-2xl">
       <header className="flex items-center justify-between gap-4 border-b border-(--color-border) px-4 py-4">
         <FeedAuthor createdAt={blog.createdAt} user={blog.user} />
-        <span className="rounded-full bg-(--color-bg) px-3 py-1 text-xs font-bold text-(--color-warn)">
+        <span className="app-chip rounded-full px-3 py-1 text-xs font-bold text-(--color-warn)">
           Blog
         </span>
       </header>
@@ -53,7 +53,7 @@ function FeedBlogCard({ blog, onComment }) {
           <div className="mt-5 flex flex-wrap gap-2">
             {blog.categories.slice(0, 8).map((category) => (
               <span
-                className="rounded-full border border-(--color-border) bg-(--color-bg) px-3 py-1 text-xs font-semibold text-(--color-muted)"
+                className="app-chip rounded-full px-3 py-1 text-xs font-semibold"
                 key={category}
               >
                 #{category}
@@ -63,7 +63,7 @@ function FeedBlogCard({ blog, onComment }) {
         ) : null}
 
         <Link
-          className="mt-5 inline-flex rounded-xl border border-(--color-border) px-4 py-2 text-sm font-bold transition hover:border-(--color-border-strong)"
+          className="mt-5 inline-flex rounded-xl border border-(--color-border) bg-(--color-surface-strong) px-4 py-2 text-sm font-bold transition hover:-translate-y-0.5 hover:border-(--color-border-strong)"
           to={`/blogs/${blog._id}`}
         >
           Read blog

@@ -1,16 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
 import { Send } from "lucide-react";
-import { useSelector } from "react-redux";
 import { Link } from "react-router";
-import { toast } from "sonner";
 
+import BackButton from "../../../../shared/components/BackButton";
 import { formatRelativeTime } from "../../../../shared/utils/formatRelativeTime";
-import {
-  useGetConversationsQuery,
-  useGetMessagesQuery,
-  useMarkAsReadMutation,
-  useSendMessageMutation,
-} from "../../api/chat.api";
+import useMessagePage from "./useMessagePage";
 
 function Avatar({ user, size = "h-12 w-12" }) {
   return user?.profilePicture?.url ? (
@@ -29,67 +22,27 @@ function Avatar({ user, size = "h-12 w-12" }) {
 }
 
 function MessagePage() {
-  const currentUser = useSelector((state) => state.auth.user);
-  const [selectedChat, setSelectedChat] = useState(null);
-  const [message, setMessage] = useState("");
-  const scrollRef = useRef(null);
-
-  const { data: conversationsData, isLoading: conversationsLoading } =
-    useGetConversationsQuery();
-  const conversations = conversationsData?.conversations || [];
-  const selectedConversationId = selectedChat?._id;
-  const { data: messagesData, isLoading: messagesLoading } =
-    useGetMessagesQuery(
-      { conversationId: selectedConversationId, page: 1 },
-      { skip: !selectedConversationId },
-    );
-  const [sendMessage, { isLoading: sending }] = useSendMessageMutation();
-  const [markAsRead] = useMarkAsReadMutation();
-  const messages = messagesData?.messages || [];
-
-  const activeChat = useMemo(() => {
-    if (!selectedChat) return null;
-    return (
-      conversations.find((chat) => chat._id === selectedChat._id) ||
-      selectedChat
-    );
-  }, [conversations, selectedChat]);
-
-  useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length, selectedConversationId]);
-
-  useEffect(() => {
-    if (
-      activeChat?._id &&
-      activeChat.isUnread &&
-      activeChat.lastMessage?.sender !== currentUser?._id
-    ) {
-      markAsRead(activeChat._id);
-    }
-  }, [activeChat, currentUser?._id, markAsRead]);
-
-  async function handleSend() {
-    const text = message.trim();
-    if (!text || !activeChat?.otherUser?._id) return;
-
-    setMessage("");
-
-    try {
-      await sendMessage({
-        conversationId: activeChat._id,
-        message: text,
-        receiverId: activeChat.otherUser._id,
-      }).unwrap();
-    } catch (error) {
-      setMessage(text);
-      toast.error(error?.data?.message || "Message not sent");
-    }
-  }
+  const {
+    activeChat,
+    conversations,
+    conversationsLoading,
+    currentUser,
+    handleSend,
+    message,
+    messages,
+    messagesLoading,
+    scrollRef,
+    sending,
+    setMessage,
+    setSelectedChat,
+  } = useMessagePage();
 
   return (
-    <main className="min-h-screen bg-(--color-bg) px-4 py-5 text-(--color-text) lg:px-8">
-      <section className="mx-auto grid h-[calc(100vh-40px)] max-w-6xl overflow-hidden rounded-2xl border border-(--color-border) bg-(--color-surface) md:grid-cols-[340px_1fr]">
+    <main className="app-page px-4 py-5 lg:px-8">
+      <div className="mx-auto mb-4 max-w-6xl">
+        <BackButton />
+      </div>
+      <section className="app-panel mx-auto grid h-[calc(100vh-96px)] max-w-6xl overflow-hidden rounded-2xl md:grid-cols-[340px_1fr]">
         <aside
           className={`${activeChat ? "hidden md:flex" : "flex"} flex-col border-r border-(--color-border)`}
         >

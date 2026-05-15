@@ -21,7 +21,7 @@ function BlogCard({
   const isPublished = Boolean(blog.isPublished);
 
   return (
-    <article className="flex min-h-[310px] flex-col rounded-2xl border border-(--color-border) bg-(--color-surface) p-4">
+    <article className="app-card flex min-h-[310px] flex-col rounded-2xl p-4">
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-2">
@@ -72,7 +72,7 @@ function BlogCard({
           <div className="flex flex-wrap gap-2">
             {blog.categories.slice(0, 4).map((category) => (
               <span
-                className="rounded-full border border-(--color-border) px-2.5 py-1 text-xs text-(--color-muted)"
+                className="app-chip rounded-full px-2.5 py-1 text-xs"
                 key={category}
               >
                 {category}

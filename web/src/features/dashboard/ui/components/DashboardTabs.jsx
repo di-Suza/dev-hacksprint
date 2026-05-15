@@ -6,7 +6,7 @@ const tabs = [
 
 function DashboardTabs({ activeTab, onTabChange }) {
   return (
-    <div className="mb-6 overflow-x-auto rounded-2xl border border-(--color-border) bg-(--color-surface) p-2">
+    <div className="app-panel mb-6 overflow-x-auto rounded-2xl p-2">
       <div className="flex min-w-max gap-2">
         {tabs.map((tab) => (
           <button

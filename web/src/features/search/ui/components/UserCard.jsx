@@ -2,7 +2,7 @@ import { Link } from "react-router";
 
 function UserCard({ user }) {
   return (
-    <article className="rounded-2xl border border-(--color-border) bg-(--color-surface) p-4">
+    <article className="app-card rounded-2xl p-4">
       <Link to={`/profile/${user._id}`} className="flex items-start gap-4">
         <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full">
           <img
@@ -40,7 +40,7 @@ function UserCard({ user }) {
             <div className="mt-3 flex flex-wrap gap-2">
               {user.skills.slice(0, 5).map((skill) => (
                 <span
-                  className="rounded-full border border-(--color-border) bg-(--color-bg) px-3 py-1 text-xs font-semibold text-(--color-muted)"
+                  className="app-chip rounded-full px-3 py-1 text-xs font-semibold"
                   key={skill}
                 >
                   {skill}

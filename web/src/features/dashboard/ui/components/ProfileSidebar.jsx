@@ -30,7 +30,7 @@ function ProfileSidebar({
   ];
 
   return (
-    <aside className="h-fit rounded-2xl border border-(--color-border) bg-(--color-surface) p-5 lg:sticky lg:top-6">
+    <aside className="app-panel h-fit rounded-2xl p-5 lg:sticky lg:top-6">
       <div>
         <p className="text-lg font-bold">My Profile</p>
         <p className="mt-1 text-sm leading-5 text-(--color-muted)">
@@ -67,7 +67,7 @@ function ProfileSidebar({
 
         <div className="mt-4 flex flex-wrap justify-center gap-2">
           <button
-            className="rounded-lg bg-(--color-text) px-4 py-2 text-sm font-semibold text-(--color-bg) transition hover:bg-white disabled:opacity-60"
+            className="rounded-lg border border-(--color-accent) bg-(--color-accent) px-4 py-2 text-sm font-black text-black transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-60"
             disabled={isSavingPicture || !selectedFileName}
             type="button"
             onClick={onSavePicture}
@@ -91,7 +91,7 @@ function ProfileSidebar({
           const Component = stat.action ? "button" : "div";
           return (
             <Component
-              className="rounded-xl border border-(--color-border) bg-(--color-bg) p-4 text-left transition hover:border-(--color-border-strong)"
+              className="rounded-xl border border-(--color-border) bg-(--color-bg)/70 p-4 text-left transition hover:-translate-y-0.5 hover:border-(--color-border-strong) hover:bg-(--color-surface-strong)"
               key={stat.label}
               type={stat.action ? "button" : undefined}
               onClick={stat.action}

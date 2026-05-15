@@ -1,9 +1,5 @@
-import { useState } from "react";
 import { LockKeyhole, Mail, UserRound } from "lucide-react";
-import { useGoogleLogin } from "@react-oauth/google";
-import { useDispatch } from "react-redux";
-import { Link, useNavigate } from "react-router";
-import { toast } from "sonner";
+import { Link } from "react-router";
 
 import { Button } from "../../../../shared/components/ui/button";
 import {
@@ -15,51 +11,29 @@ import {
 } from "../../../../shared/components/ui/card";
 import { Input } from "../../../../shared/components/ui/input";
 import { Separator } from "../../../../shared/components/ui/separator";
+import BackButton from "../../../../shared/components/BackButton";
 import AuthEmailFlowModal from "../components/AuthEmailFlowModal";
-import { useGoogleLoginMutation, useSendOtpMutation } from "../../api/auth.api";
-import { setUser } from "../../state/authSlice";
+import useSignupPage from "./useSignupPage";
 
 function SignupPage() {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [sendOtp, { isLoading }] = useSendOtpMutation();
-  const [googleLogin, { isLoading: isGoogleLoading }] = useGoogleLoginMutation();
-
-  const handleGoogleLogin = useGoogleLogin({
-    flow: "auth-code",
-    onSuccess: async ({ code }) => {
-      try {
-        const data = await googleLogin(code).unwrap();
-        dispatch(setUser(data));
-        toast.success("Logged in with Google");
-        navigate("/feed", { replace: true });
-      } catch (error) {
-        toast.error(error?.data?.message || "Google login failed");
-      }
-    },
-    onError: () => {
-      toast.error("Google login was cancelled");
-    },
-  });
-
-  async function handleSendOtp(event) {
-    event.preventDefault();
-
-    try {
-      await sendOtp({ email }).unwrap();
-      toast.success("OTP sent to your email");
-      setIsAuthModalOpen(true);
-    } catch (error) {
-      toast.error(error?.data?.message || "Failed to send OTP");
-    }
-  }
+  const {
+    email,
+    handleGoogleLogin,
+    handleSendOtp,
+    isAuthModalOpen,
+    isGoogleLoading,
+    isLoading,
+    name,
+    password,
+    setEmail,
+    setIsAuthModalOpen,
+    setName,
+    setPassword,
+  } = useSignupPage();
 
   return (
     <main className="grid min-h-screen place-items-center bg-[radial-gradient(circle_at_50%_42%,rgba(255,255,255,0.07),transparent_28%),var(--color-bg)] px-5 py-10 text-(--color-text)">
+      <BackButton className="fixed left-5 top-5" fallback="/" />
       <Card className="w-full max-w-sm animate-soft-in border-0 bg-transparent shadow-none">
         <CardHeader className="px-0 pb-3">
           <CardTitle>Sign Up or Continue with Google!</CardTitle>

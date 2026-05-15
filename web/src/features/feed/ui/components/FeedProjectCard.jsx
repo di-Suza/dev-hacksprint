@@ -15,16 +15,16 @@ function FeedProjectCard({ onComment, project }) {
   });
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-(--color-border) bg-(--color-surface)">
+    <article className="app-card overflow-hidden rounded-2xl">
       <header className="flex items-center justify-between gap-4 border-b border-(--color-border) px-4 py-4">
         <FeedAuthor createdAt={project.createdAt} user={project.user} />
-        <span className="rounded-full bg-(--color-bg) px-3 py-1 text-xs font-bold text-(--color-accent)">
+        <span className="app-chip rounded-full px-3 py-1 text-xs font-bold text-(--color-accent)">
           Project
         </span>
       </header>
 
       <Link
-        className="relative grid h-[360px] max-h-[56vh] min-h-[240px] place-items-center overflow-hidden bg-black sm:h-[430px]"
+        className="media-frame relative grid h-[360px] max-h-[56vh] min-h-[240px] place-items-center overflow-hidden sm:h-[430px]"
         to={`/projects/${project._id}`}
       >
         {coverImage ? (
@@ -61,7 +61,7 @@ function FeedProjectCard({ onComment, project }) {
           <div className="mt-4 flex flex-wrap gap-2">
             {project.tags.slice(0, 6).map((tag) => (
               <span
-                className="rounded-full border border-(--color-border) bg-(--color-bg) px-3 py-1 text-xs font-semibold text-(--color-muted)"
+                className="app-chip rounded-full px-3 py-1 text-xs font-semibold"
                 key={tag}
               >
                 #{tag}
@@ -73,7 +73,7 @@ function FeedProjectCard({ onComment, project }) {
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {project.githubLink ? (
             <a
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-(--color-border) px-4 py-2 text-sm font-bold transition hover:border-(--color-border-strong)"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-(--color-border) bg-(--color-surface-strong) px-4 py-2 text-sm font-bold transition hover:-translate-y-0.5 hover:border-(--color-border-strong)"
               href={project.githubLink}
               rel="noreferrer"
               target="_blank"
@@ -85,7 +85,7 @@ function FeedProjectCard({ onComment, project }) {
 
           {project.liveLink ? (
             <a
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-(--color-text) px-4 py-2 text-sm font-bold text-(--color-bg) transition hover:bg-white"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-(--color-accent) bg-(--color-accent) px-4 py-2 text-sm font-black text-black transition hover:-translate-y-0.5 hover:opacity-90"
               href={project.liveLink}
               rel="noreferrer"
               target="_blank"

@@ -1,13 +1,9 @@
 import { Bell, Heart, MessageCircle, Trash2, UserPlus } from "lucide-react";
 import { Link } from "react-router";
 
+import BackButton from "../../../../shared/components/BackButton";
 import { formatRelativeTime } from "../../../../shared/utils/formatRelativeTime";
-import {
-  useDeleteAllNotificationsMutation,
-  useDeleteNotificationMutation,
-  useGetNotificationsQuery,
-  useMarkAllNotificationsReadMutation,
-} from "../../api/notification.api";
+import useNotificationPage from "./useNotificationPage";
 
 const iconMap = {
   COMMENT: MessageCircle,
@@ -15,33 +11,23 @@ const iconMap = {
   LIKE: Heart,
 };
 
-function getNotificationText(notification) {
-  const name = notification.sender?.userName || "Someone";
-  if (notification.type === "FOLLOW") return `${name} started following you`;
-  if (notification.type === "COMMENT") return `${name} commented on your post`;
-  return `${name} liked your post`;
-}
-
-function getNotificationLink(notification) {
-  if (notification.contentType === "project") {
-    return `/projects/${notification.contentId?._id || notification.contentId}`;
-  }
-  if (notification.contentType === "blog") {
-    return `/blogs/${notification.contentId?._id || notification.contentId}`;
-  }
-  return `/profile/${notification.sender?._id}`;
-}
-
 function NotificationPage() {
-  const { data, isLoading } = useGetNotificationsQuery(1);
-  const [markAllRead] = useMarkAllNotificationsReadMutation();
-  const [deleteNotification] = useDeleteNotificationMutation();
-  const [deleteAllNotifications] = useDeleteAllNotificationsMutation();
-  const notifications = data?.notifications || [];
+  const {
+    deleteAllNotifications,
+    deleteNotification,
+    getNotificationLink,
+    getNotificationText,
+    isLoading,
+    markAllRead,
+    notifications,
+  } = useNotificationPage();
 
   return (
-    <main className="min-h-screen bg-(--color-bg) px-4 py-6 text-(--color-text) lg:px-8">
-      <section className="mx-auto max-w-3xl rounded-2xl border border-(--color-border) bg-(--color-surface)">
+    <main className="app-page px-4 py-6 lg:px-8">
+      <div className="mx-auto mb-4 max-w-3xl">
+        <BackButton />
+      </div>
+      <section className="app-panel mx-auto max-w-3xl rounded-2xl">
         <header className="flex flex-col gap-4 border-b border-(--color-border) p-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-bold text-(--color-accent)">

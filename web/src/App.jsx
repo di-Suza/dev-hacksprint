@@ -3,6 +3,7 @@ import { Toaster } from "sonner";
 
 import AuthInitializer from "./app/authInitializer";
 import router from "./app/routes/router";
+import ThemeToggle from "./shared/components/ThemeToggle";
 
 function App() {
   return (
@@ -10,6 +11,7 @@ function App() {
       <AuthInitializer>
         <RouterProvider router={router} />
       </AuthInitializer>
+      <ThemeToggle />
       <Toaster
         position="top-center"
         toastOptions={{

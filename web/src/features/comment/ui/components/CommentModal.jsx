@@ -1,14 +1,8 @@
 import { Send, Trash2, X } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
 
 import { Button } from "../../../../shared/components/ui/button";
 import { formatRelativeTime } from "../../../../shared/utils/formatRelativeTime";
-import {
-  useCreateCommentMutation,
-  useDeleteCommentMutation,
-  useGetCommentsQuery,
-} from "../../api/comment.api";
+import useCommentModal from "./useCommentModal";
 
 function CommentAvatar({ user }) {
   const profileUrl = user?.profilePicture?.url;
@@ -37,53 +31,23 @@ function CommentModal({
   isOpen,
   onClose,
 }) {
-  const [commentText, setCommentText] = useState("");
-  const queryArg = { contentId, contentType };
-  const { data, isFetching, isLoading } = useGetCommentsQuery(queryArg, {
-    skip: !isOpen || !contentId || !contentType,
-  });
-  const [createComment, { isLoading: isCreating }] = useCreateCommentMutation();
-  const [deleteComment, { isLoading: isDeleting }] = useDeleteCommentMutation();
-  const comments = data?.comments || [];
+  const {
+    commentText,
+    comments,
+    handleCreateComment,
+    handleDeleteComment,
+    isCreating,
+    isDeleting,
+    isFetching,
+    isLoading,
+    setCommentText,
+  } = useCommentModal({ commentCount, contentId, contentType, isOpen });
 
   if (!isOpen) return null;
 
-  async function handleCreateComment(event) {
-    event.preventDefault();
-
-    const nextComment = commentText.trim();
-    if (!nextComment) return;
-
-    setCommentText("");
-    try {
-      await createComment({
-        comment: nextComment,
-        contentId,
-        contentType,
-        currentCommentCount: commentCount,
-      }).unwrap();
-    } catch (error) {
-      setCommentText(nextComment);
-      toast.error(error?.data?.message || "Failed to add comment");
-    }
-  }
-
-  async function handleDeleteComment(comment) {
-    try {
-      await deleteComment({
-        commentId: comment._id,
-        contentId,
-        contentType,
-        currentCommentCount: commentCount,
-      }).unwrap();
-    } catch (error) {
-      toast.error(error?.data?.message || "Failed to delete comment");
-    }
-  }
-
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 px-4 py-6 backdrop-blur-sm">
-      <section className="flex h-[78vh] max-h-[720px] min-h-[560px] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-(--color-border) bg-(--color-surface) shadow-[0_24px_90px_rgba(0,0,0,0.5)]">
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/55 px-4 py-6 backdrop-blur-md">
+      <section className="app-panel flex h-[78vh] max-h-[720px] min-h-[560px] w-full max-w-xl flex-col overflow-hidden rounded-2xl">
         <header className="flex items-center justify-between border-b border-(--color-border) px-4 py-3">
           <div>
             <h2 className="text-lg font-black">Comments</h2>

@@ -1,43 +1,45 @@
-import { useEffect, useState } from "react";
 import { Send, X } from "lucide-react";
-import { Link, useNavigate, useParams } from "react-router";
-import { useSelector } from "react-redux";
-import { toast } from "sonner";
+import {
+  FaGithub,
+  FaGlobe,
+  FaInstagram,
+  FaLinkedin,
+  FaXTwitter,
+  FaYoutube,
+} from "react-icons/fa6";
+import { Link } from "react-router";
 
-import { useGetUserProfileQuery } from "../../api/profile.api";
-import { useDebouncedFollow } from "../../hooks/useDebouncedFollow";
-import { useSendMessageMutation } from "../../../message/api/chat.api";
+import BackButton from "../../../../shared/components/BackButton";
 import FollowListModal from "../components/FollowListModal";
+import useProfilePage from "./useProfilePage";
+
+const socialLinkMeta = [
+  { key: "github", label: "GitHub", icon: FaGithub },
+  { key: "linkedin", label: "LinkedIn", icon: FaLinkedin },
+  { key: "x", label: "X", icon: FaXTwitter },
+  { key: "youtube", label: "YouTube", icon: FaYoutube },
+  { key: "instagram", label: "Instagram", icon: FaInstagram },
+  { key: "portfolio", label: "Portfolio", icon: FaGlobe },
+];
 
 function ProfilePage() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const currentUser = useSelector((state) => state.auth.user);
-  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
-  const [messageText, setMessageText] = useState("");
-  const [followModalType, setFollowModalType] = useState("");
-  const [sendMessage, { isLoading: sendingMessage }] = useSendMessageMutation();
-
-  // Redirect to dashboard if viewing own profile
-  const shouldSkip = currentUser?._id === id;
-
-  const { data, isLoading } = useGetUserProfileQuery(id, {
-    skip: shouldSkip,
-  });
-  const user = data?.user?.user;
-  const projects = data?.user?.projects || [];
-  const blogs = data?.user?.blogs || [];
-  const profileFollow = useDebouncedFollow({
-    followersCount: user?.followersCount,
-    isFollowed: user?.isFollowed,
-    userId: user?._id,
-  });
-
-  useEffect(() => {
-    if (shouldSkip) {
-      navigate("/dashboard");
-    }
-  }, [shouldSkip, navigate]);
+  const {
+    blogs,
+    followModalType,
+    handleStartChat,
+    isLoading,
+    isMessageModalOpen,
+    messageText,
+    profileFollow,
+    projects,
+    sendingMessage,
+    setFollowModalType,
+    setIsMessageModalOpen,
+    setMessageText,
+    shouldSkip,
+    socialLinks,
+    user,
+  } = useProfilePage(socialLinkMeta);
 
   if (shouldSkip) {
     return null;
@@ -45,10 +47,11 @@ function ProfilePage() {
 
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-[radial-gradient(circle_at_22%_0%,rgba(112,241,201,0.08),transparent_24%),var(--color-bg)] px-5 py-8">
+      <main className="app-page px-5 py-8">
         <div className="mx-auto max-w-4xl">
+          <BackButton className="mb-4" />
           <div className="animate-pulse space-y-8">
-            <div className="rounded-2xl border border-(--color-border) bg-(--color-surface) p-8">
+            <div className="app-panel rounded-2xl p-8">
               <div className="flex gap-6">
                 <div className="h-32 w-32 shrink-0 rounded-full bg-(--color-surface-strong)" />
                 <div className="flex-1 space-y-4">
@@ -69,7 +72,7 @@ function ProfilePage() {
 
   if (!user) {
     return (
-      <main className="min-h-screen grid place-items-center bg-[radial-gradient(circle_at_22%_0%,rgba(112,241,201,0.08),transparent_24%),var(--color-bg)]">
+      <main className="app-page grid place-items-center">
         <div className="text-center">
           <p className="text-2xl font-black">User not found</p>
         </div>
@@ -77,29 +80,12 @@ function ProfilePage() {
     );
   }
 
-  async function handleStartChat() {
-    const text = messageText.trim();
-    if (!text) return;
-
-    try {
-      await sendMessage({
-        message: text,
-        receiverId: user._id,
-      }).unwrap();
-      toast.success("Message sent");
-      setMessageText("");
-      setIsMessageModalOpen(false);
-      navigate("/messages");
-    } catch (error) {
-      toast.error(error?.data?.message || "Message not sent");
-    }
-  }
-
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_22%_0%,rgba(112,241,201,0.08),transparent_24%),var(--color-bg)] px-5 py-8 text-(--color-text)">
+    <main className="app-page px-5 py-8">
       <section className="mx-auto max-w-4xl">
+        <BackButton className="mb-4" />
         {/* Header Section */}
-        <div className="rounded-2xl border border-(--color-border) bg-(--color-surface) p-6 mb-8">
+        <div className="app-panel mb-8 rounded-2xl p-6">
           <div className="flex flex-col sm:flex-row gap-8">
             {/* Profile Picture */}
             <div className="shrink-0">
@@ -175,6 +161,28 @@ function ProfilePage() {
                   Message
                 </button>
               </div>
+
+              {socialLinks.length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {socialLinks.map((link) => {
+                    const Icon = link.icon;
+
+                    return (
+                      <a
+                        aria-label={link.label}
+                        className="grid h-10 w-10 place-items-center rounded-xl border border-(--color-border) text-(--color-muted) transition hover:border-(--color-border-strong) hover:bg-(--color-bg) hover:text-(--color-text)"
+                        href={link.href}
+                        key={link.key}
+                        rel="noreferrer"
+                        target="_blank"
+                        title={link.label}
+                      >
+                        <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
+                      </a>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
 
@@ -190,13 +198,13 @@ function ProfilePage() {
 
         {/* Skills Section */}
         {user.skills && user.skills.length > 0 && (
-          <div className="rounded-2xl border border-(--color-border) bg-(--color-surface) p-6 mb-8">
+          <div className="app-card mb-8 rounded-2xl p-6">
             <h2 className="text-xl font-black mb-4">Skills</h2>
             <div className="flex flex-wrap gap-2">
               {user.skills.map((skill) => (
                 <span
                   key={skill}
-                  className="rounded-full border border-(--color-border) bg-(--color-bg) px-4 py-2 text-sm font-semibold"
+                  className="app-chip rounded-full px-4 py-2 text-sm font-semibold"
                 >
                   {skill}
                 </span>
@@ -207,7 +215,7 @@ function ProfilePage() {
 
         {/* Experience Section */}
         {user.experiences && user.experiences.length > 0 && (
-          <div className="rounded-2xl border border-(--color-border) bg-(--color-surface) p-6 mb-8">
+          <div className="app-card mb-8 rounded-2xl p-6">
             <h2 className="text-xl font-black mb-4">Experience</h2>
             <div className="space-y-4">
               {user.experiences.map((exp, idx) => (
@@ -227,7 +235,7 @@ function ProfilePage() {
 
         {/* Education Section */}
         {user.educations && user.educations.length > 0 && (
-          <div className="rounded-2xl border border-(--color-border) bg-(--color-surface) p-6 mb-8">
+          <div className="app-card mb-8 rounded-2xl p-6">
             <h2 className="text-xl font-black mb-4">Education</h2>
             <div className="space-y-4">
               {user.educations.map((edu, idx) => (
@@ -248,16 +256,16 @@ function ProfilePage() {
 
         {/* Projects Section */}
         {projects.length > 0 && (
-          <div className="rounded-2xl border border-(--color-border) bg-(--color-surface) p-6 mb-8">
+          <div className="app-card mb-8 rounded-2xl p-6">
             <h2 className="text-xl font-black mb-4">Projects</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {projects.map((project) => (
                 <Link
                   key={project._id}
                   to={`/projects/${project._id}`}
-                  className="group rounded-xl border border-(--color-border) overflow-hidden hover:border-(--color-border-strong) transition"
+                  className="group overflow-hidden rounded-xl border border-(--color-border) bg-(--color-surface-strong) transition hover:-translate-y-1 hover:border-(--color-border-strong)"
                 >
-                  <div className="aspect-video bg-black overflow-hidden">
+                  <div className="media-frame aspect-video overflow-hidden">
                     {project.images && project.images[0]?.url ? (
                       <img
                         alt={project.title}
@@ -277,7 +285,7 @@ function ProfilePage() {
                       {project.title}
                     </p>
                     <p className="mt-2 text-xs text-(--color-muted)">
-                      View project →
+                      View project
                     </p>
                   </div>
                 </Link>
@@ -288,7 +296,7 @@ function ProfilePage() {
 
         {/* Blogs Section */}
         {blogs.length > 0 && (
-          <div className="rounded-2xl border border-(--color-border) bg-(--color-surface) p-6 mb-8">
+          <div className="app-card mb-8 rounded-2xl p-6">
             <h2 className="text-xl font-black mb-4">Blogs</h2>
             <div className="space-y-4">
               {blogs.map((blog) => {
@@ -303,7 +311,7 @@ function ProfilePage() {
                   <Link
                     key={blog._id}
                     to={`/blogs/${blog._id}`}
-                    className="block rounded-xl border border-(--color-border) p-4 hover:bg-(--color-surface-strong) transition"
+                    className="block rounded-xl border border-(--color-border) bg-(--color-surface-strong) p-4 transition hover:-translate-y-0.5 hover:border-(--color-border-strong)"
                   >
                     <p className="font-bold hover:text-(--color-accent) transition">
                       {blog.title}
@@ -320,13 +328,13 @@ function ProfilePage() {
 
         {/* Language Section */}
         {user.languages && user.languages.length > 0 && (
-          <div className="rounded-2xl border border-(--color-border) bg-(--color-surface) p-6 mb-8">
+          <div className="app-card mb-8 rounded-2xl p-6">
             <h2 className="text-xl font-black mb-4">Languages known</h2>
             <div className="flex flex-wrap gap-2">
               {user.languages.map((skill) => (
                 <span
                   key={skill}
-                  className="rounded-full border border-(--color-border) bg-(--color-bg) px-4 py-2 text-sm font-semibold"
+                  className="app-chip rounded-full px-4 py-2 text-sm font-semibold"
                 >
                   {skill}
                 </span>
@@ -337,13 +345,13 @@ function ProfilePage() {
 
         {/* Interests Section */}
         {user.interests && user.interests.length > 0 && (
-          <div className="rounded-2xl border border-(--color-border) bg-(--color-surface) p-6 mb-8">
+          <div className="app-card mb-8 rounded-2xl p-6">
             <h2 className="text-xl font-black mb-4">Interests</h2>
             <div className="flex flex-wrap gap-2">
               {user.interests.map((interest) => (
                 <span
                   key={interest}
-                  className="rounded-full border border-(--color-border) bg-(--color-bg) px-4 py-2 text-sm font-semibold"
+                  className="app-chip rounded-full px-4 py-2 text-sm font-semibold"
                 >
                   {interest}
                 </span>
@@ -354,7 +362,7 @@ function ProfilePage() {
 
         {/* Empty States */}
         {projects.length === 0 && blogs.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-(--color-border) bg-(--color-surface) p-12 text-center">
+          <div className="app-panel rounded-2xl border-dashed p-12 text-center">
             <p className="text-lg font-black">No projects or blogs yet</p>
             <p className="mt-2 text-sm text-(--color-muted)">
               Check back soon!
@@ -364,8 +372,8 @@ function ProfilePage() {
       </section>
 
       {isMessageModalOpen && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-(--color-border) bg-(--color-surface) p-5 shadow-2xl">
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/55 px-4 backdrop-blur-md">
+          <div className="app-panel w-full max-w-md rounded-2xl p-5">
             <div className="flex items-center justify-between gap-4 border-b border-(--color-border) pb-4">
               <div className="flex min-w-0 items-center gap-3">
                 <img
