@@ -3,14 +3,25 @@ const chatHandler = require("./chatHandler");
 const { socketAuth } = require("../middlewares/socketAuth.middleware");
 let io;
 const initSocket = (server) => {
+  const allowedOrigins = [
+    process.env.CLIENT_URL,
+    "https://devhacksprint.netlify.app",
+    "http://localhost:5173",
+  ].filter(Boolean);
+
   io = new Server(server, {
     cors: {
-      origin: "http://localhost:5173",
+      origin(origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+          return callback(null, true);
+        }
+        return callback(new Error("Not allowed by Socket CORS"));
+      },
       methods: ["POST", "GET"],
-      pingTimeout: 60000,
-      pingInterval: 25000,
       credentials: true,
     },
+    pingTimeout: 60000,
+    pingInterval: 25000,
   });
 
   // Socket Middleware

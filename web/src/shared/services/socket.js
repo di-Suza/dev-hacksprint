@@ -4,10 +4,13 @@ let socket;
 
 export function getSocket() {
   if (!socket) {
-    socket = io("http://localhost:8080", {
+    socket = io(
+      import.meta.env.VITE_SOCKET_URL || "https://dev-hacksprint.onrender.com",
+      {
       autoConnect: false,
       withCredentials: true,
-    });
+      },
+    );
   }
 
   return socket;

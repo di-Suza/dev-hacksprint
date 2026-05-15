@@ -12,10 +12,21 @@ const app = express();
 app.set("trust proxy", 1); //for rate-limiter - IP origin trust
 app.use(express.json());
 app.use(cookieParser());
+
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  "https://devhacksprint.netlify.app",
+  "http://localhost:5173",
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: "https://devhacksprint.netlify.app",
-    // origin: "http://localhost:5173",
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true, // for cookies
   }),
 );

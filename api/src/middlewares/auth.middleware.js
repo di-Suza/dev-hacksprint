@@ -39,7 +39,7 @@ module.exports.isAuthenticated = catchAsync(async (req, res, next) => {
     if (!req.user) {
       let options = {
         httpOnly: true,
-        secure: true,
+        secure: process.env.NODE_ENV === "production",
         sameSite: "None",
       };
       res.clearCookie("accessToken", options);
